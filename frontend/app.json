@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "BranchFlow Pro",
+    "slug": "branchflow-pro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.branchflow.pro"
+    },
+    "ios": {
+      "bundleIdentifier": "com.branchflow.pro"
+    }
+  }
+}
