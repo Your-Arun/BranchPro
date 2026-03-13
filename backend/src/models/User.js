@@ -6,8 +6,10 @@ const userSchema = new mongoose.Schema(
     fullName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, trim: true, lowercase: true },
     password: { type: String, required: true },
+    phone: { type: String, default: "" },
+    companyName: { type: String, default: "" },
     role: { type: String, enum: ["ADMIN", "STAFF"], default: "STAFF" },
-    branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: true },
+    branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: false },
     avatarUrl: { type: String, default: "" }
   },
   { timestamps: true }

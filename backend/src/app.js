@@ -19,7 +19,7 @@ export const createApp = () => {
 
   app.use(cors({ origin: process.env.CLIENT_ORIGIN || "*" }));
   app.use(express.json({ limit: "2mb" }));
-  app.use(morgan("dev"));
+  // app.use(morgan("dev")); // Removed to stop loud request logging
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, service: "branchflow-backend" });

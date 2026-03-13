@@ -8,7 +8,7 @@ const generateToken = (id) =>
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { fullName, email, password, branchId } = req.body;
+    const { fullName, email, password, branchId, phone, companyName } = req.body;
 
     if (!fullName || !email || !password || !branchId) {
       return res.status(400).json({ message: "fullName, email, password and branchId are required" });
@@ -24,6 +24,8 @@ export const registerUser = async (req, res, next) => {
       email,
       password,
       branchId,
+      phone,
+      companyName,
       role: "STAFF"
     });
 
@@ -34,8 +36,46 @@ export const registerUser = async (req, res, next) => {
       fullName: populatedUser.fullName,
       email: populatedUser.email,
       role: populatedUser.role,
+      phone: populatedUser.phone,
+      companyName: populatedUser.companyName,
       branch: populatedUser.branchId,
       token: generateToken(populatedUser._id)
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const adminRegister = async (req, res, next) => {
+  try {
+    const { fullName, email, password, phone, companyName } = req.body;
+
+    if (!fullName || !email || !password || !companyName) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const userExists = await User.findOne({ email: email.toLowerCase() });
+    if (userExists) {
+      return res.status(400).json({ message: "Admin with this email already exists" });
+    }
+
+    const user = await User.create({
+      fullName,
+      email,
+      password,
+      phone,
+      companyName,
+      role: "ADMIN"
+    });
+
+    res.status(201).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      companyName: user.companyName,
+      token: generateToken(user._id)
     });
   } catch (error) {
     next(error);
@@ -61,6 +101,8 @@ export const loginUser = async (req, res, next) => {
       fullName: user.fullName,
       email: user.email,
       role: user.role,
+      phone: user.phone,
+      companyName: user.companyName,
       branch: user.branchId,
       token: generateToken(user._id)
     });
