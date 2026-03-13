@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
 const request = async (path, { method = "GET", token, body } = {}) => {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -28,21 +28,25 @@ export default function App() {
 
   const [branches, setBranches] = useState([]);
   const [users, setUsers] = useState([]);
+  const [dispatches, setDispatches] = useState([]);
 
   const [loginForm, setLoginForm] = useState({ email: "alex.rivera@branchflow.pro", password: "Admin@123" });
   const [branchForm, setBranchForm] = useState({ name: "", city: "", address: "", code: "", status: "ACTIVE" });
   const [editingBranchId, setEditingBranchId] = useState("");
   const [userForm, setUserForm] = useState({ fullName: "", email: "", password: "", role: "STAFF", branchId: "" });
+  const [editingUserId, setEditingUserId] = useState("");
 
   const isLoggedIn = Boolean(token && profile?.role === "ADMIN");
 
   const loadAdminData = async (authToken = token) => {
-    const [b, u] = await Promise.all([
+    const [b, u, d] = await Promise.all([
       request("/admin/branches", { token: authToken }),
-      request("/admin/users", { token: authToken })
+      request("/admin/users", { token: authToken }),
+      request("/admin/dispatches", { token: authToken })
     ]);
     setBranches(b);
     setUsers(u);
+    setDispatches(d);
   };
 
   useEffect(() => {
@@ -76,6 +80,7 @@ export default function App() {
     setProfile(null);
     setBranches([]);
     setUsers([]);
+    setDispatches([]);
     localStorage.removeItem("admin_token");
     localStorage.removeItem("admin_profile");
   };
@@ -123,8 +128,46 @@ export default function App() {
     e.preventDefault();
     try {
       setError("");
-      await request("/admin/users", { method: "POST", token, body: userForm });
+      if (editingUserId) {
+        await request(`/admin/users/${editingUserId}`, { method: "PUT", token, body: userForm });
+      } else {
+        await request("/admin/users", { method: "POST", token, body: userForm });
+      }
       setUserForm({ fullName: "", email: "", password: "", role: "STAFF", branchId: branches[0]?._id || "" });
+      setEditingUserId("");
+      await loadAdminData();
+    } catch (e2) {
+      setError(e2.message);
+    }
+  };
+
+  const startEditUser = (user) => {
+    setEditingUserId(user._id);
+    setUserForm({
+      fullName: user.fullName,
+      email: user.email,
+      password: "",
+      role: user.role,
+      branchId: user.branchId || ""
+    });
+  };
+
+  const onDeleteUser = async (id) => {
+    if (!window.confirm("Delete this user?")) return;
+    try {
+      setError("");
+      await request(`/admin/users/${id}`, { method: "DELETE", token });
+      await loadAdminData();
+    } catch (e2) {
+      setError(e2.message);
+    }
+  };
+
+  const onDeleteDispatch = async (id) => {
+    if (!window.confirm("Delete this dispatch?")) return;
+    try {
+      setError("");
+      await request(`/admin/dispatches/${id}`, { method: "DELETE", token });
       await loadAdminData();
     } catch (e2) {
       setError(e2.message);
@@ -189,7 +232,7 @@ export default function App() {
         </div>
 
         <div className="card">
-          <h3>Create User</h3>
+          <h3>{editingUserId ? "Edit User" : "Create User"}</h3>
           <form onSubmit={onUserSubmit} className="form">
             <input placeholder="Full name" value={userForm.fullName} onChange={(e) => setUserForm((s) => ({ ...s, fullName: e.target.value }))} required />
             <input placeholder="Email" type="email" value={userForm.email} onChange={(e) => setUserForm((s) => ({ ...s, email: e.target.value }))} required />
@@ -204,7 +247,7 @@ export default function App() {
                 <option key={b._id} value={b._id}>{b.name}</option>
               ))}
             </select>
-            <button type="submit">Create User</button>
+            <button type="submit">{editingUserId ? "Update User" : "Create User"}</button>
           </form>
         </div>
       </section>
@@ -247,6 +290,7 @@ export default function App() {
               <th>Email</th>
               <th>Role</th>
               <th>Branch</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -256,6 +300,40 @@ export default function App() {
                 <td>{u.email}</td>
                 <td>{u.role}</td>
                 <td>{u.branchName}</td>
+                <td>
+                  <button onClick={() => startEditUser(u)}>Edit</button>
+                  <button className="danger" onClick={() => onDeleteUser(u._id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section className="card">
+        <h3>Dispatches</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Tracking ID</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dispatches.map((d) => (
+              <tr key={d._id}>
+                <td>{d.trackingId}</td>
+                <td>{d.fromBranch}</td>
+                <td>{d.toBranch}</td>
+                <td>{d.status}</td>
+                <td>{new Date(d.dispatchDate).toLocaleDateString()}</td>
+                <td>
+                  <button className="danger" onClick={() => onDeleteDispatch(d._id)}>Delete</button>
+                </td>
               </tr>
             ))}
           </tbody>

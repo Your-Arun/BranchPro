@@ -137,3 +137,15 @@ export const updateDispatchStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteDispatch = async (req, res, next) => {
+  try {
+    const dispatch = await Dispatch.findByIdAndDelete(req.params.id);
+    if (!dispatch) {
+      return res.status(404).json({ message: "Dispatch not found" });
+    }
+    res.json({ message: "Dispatch removed" });
+  } catch (error) {
+    next(error);
+  }
+};

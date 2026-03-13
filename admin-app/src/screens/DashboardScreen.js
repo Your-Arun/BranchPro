@@ -36,8 +36,8 @@ export const DashboardScreen = ({ navigation }) => {
     <ScreenLayout title="" loading={loading} error={error}>
       <View style={styles.headerArea}>
         <View>
-          <Text style={styles.greeting}>Hello, {userAuth?.fullName?.split(" ")[0] || "Staff"}</Text>
-          <Text style={styles.subGreeting}>Here is your branch overview today</Text>
+          <Text style={styles.greeting}>Hello, {userAuth?.fullName?.split(" ")[0] || "Admin"}</Text>
+          <Text style={styles.subGreeting}>Here is your system overview today</Text>
         </View>
         <Pressable style={styles.profileBtn}>
           <Ionicons name="person" size={20} color={colors.primary} />
