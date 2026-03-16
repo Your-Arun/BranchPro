@@ -22,7 +22,10 @@ export const DashboardScreen = () => {
 
   const totalBranches = branches?.length || 0;
   const totalStaff = users?.filter(u => u.role === "STAFF").length || 0;
-  const activeDispatches = dispatches?.filter(d => ["SENT", "IN_TRANSIT"].includes(d.status)).length || 0;
+  const activeDispatches = dispatches?.filter(d => ["SENT", "IN_TRANSIT", "WAITING_RECEIPT"].includes(d.status)).length || 0;
+  const pendingDispatches = dispatches?.filter(d => d.status === "PENDING").length || 0;
+  const overdueDispatches = dispatches?.filter(d => d.status === "OVERDUE").length || 0;
+  const deliveredDispatches = dispatches?.filter(d => d.status === "RECEIVED").length || 0;
 
   return (
     <ScreenLayout title="Admin Console" loading={loading} error={error}>
@@ -46,9 +49,9 @@ export const DashboardScreen = () => {
         <Text style={styles.sectionTitle}>Network Status</Text>
         <View style={styles.statsGrid}>
           <StatBox label="Active Shipments" value={activeDispatches} icon="analytics" color={colors.primary} />
-          <StatBox label="Pending Early" value="4" icon="time" color={colors.warning} />
-          <StatBox label="Overdue" value="1" icon="alert-circle" color={colors.danger} />
-          <StatBox label="Delivered" value="128" icon="checkmark-done" color={colors.success} />
+          <StatBox label="Pending Early" value={pendingDispatches} icon="time" color={colors.warning} />
+          <StatBox label="Overdue" value={overdueDispatches} icon="alert-circle" color={colors.danger} />
+          <StatBox label="Delivered" value={deliveredDispatches} icon="checkmark-done" color={colors.success} />
         </View>
 
         <View style={styles.actionCard}>
@@ -56,15 +59,19 @@ export const DashboardScreen = () => {
             <Text style={styles.actionTitle}>Recent Network Hubs</Text>
             <Ionicons name="location" size={20} color={colors.primary} />
           </View>
-          {branches.slice(0, 3).map((b) => (
-            <View key={b._id} style={styles.hubItem}>
-              <View>
-                <Text style={styles.hubName}>{b.name}</Text>
-                <Text style={styles.hubSub}>{b.city} • {b.code}</Text>
+          {branches.length > 0 ? (
+            branches.slice(0, 3).map((b) => (
+              <View key={b._id} style={styles.hubItem}>
+                <View>
+                  <Text style={styles.hubName}>{b.name}</Text>
+                  <Text style={styles.hubSub}>{b.city} • {b.code}</Text>
+                </View>
+                <View style={[styles.statusIndicator, { backgroundColor: b.status === "ACTIVE" ? colors.success : colors.muted }]} />
               </View>
-              <View style={[styles.statusIndicator, { backgroundColor: b.status === "ACTIVE" ? colors.success : colors.muted }]} />
-            </View>
-          ))}
+            ))
+          ) : (
+            <Text style={styles.emptyText}>No branches created yet.</Text>
+          )}
         </View>
 
         <View style={styles.infoCard}>
@@ -120,6 +127,7 @@ const styles = StyleSheet.create({
   hubName: { color: colors.text, fontSize: 16, fontWeight: "700" },
   hubSub: { color: colors.muted, fontSize: 12, marginTop: 2 },
   statusIndicator: { width: 8, height: 8, borderRadius: 4 },
+  emptyText: { color: colors.muted, fontSize: 14, textAlign: "center", paddingVertical: 10 },
   infoCard: { flexDirection: "row", gap: 16, backgroundColor: `${colors.primary}10`, padding: 20, borderRadius: 24, alignItems: "center" },
   infoText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20, opacity: 0.8 }
 });

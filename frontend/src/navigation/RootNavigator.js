@@ -10,28 +10,13 @@ import { DispatchDetailsScreen } from "../screens/DispatchDetailsScreen";
 import { IncomingScreen } from "../screens/IncomingScreen";
 import { LoginScreen } from "../screens/LoginScreen";
 import { SignupScreen } from "../screens/SignupScreen";
+import { ProfileScreen } from "../screens/ProfileScreen";
 import { useAppData } from "../utils/AppDataContext";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Simple Profile Screen for Logout
-const ProfileScreen = () => {
-  const { userAuth, logout } = useAppData();
-  return (
-    <View style={styles.profileContainer}>
-      <Ionicons name="person-circle" size={80} color={colors.primary} />
-      <Text style={styles.profileName}>{userAuth?.fullName}</Text>
-      <Text style={styles.profileRole}>{userAuth?.role}</Text>
-      <Text style={styles.profileBranch}>{userAuth?.branch?.name || "No Branch"}</Text>
-      
-      <Pressable style={styles.logoutBtn} onPress={logout}>
-        <Text style={styles.logoutText}>Log Out</Text>
-      </Pressable>
-    </View>
-  );
-};
 
 const MainTabs = () => {
   return (
@@ -105,10 +90,5 @@ export const RootNavigator = () => {
 };
 
 const styles = StyleSheet.create({
-  profileContainer: { flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center", padding: 20 },
-  profileName: { color: colors.text, fontSize: 24, fontWeight: "bold", marginTop: 10 },
-  profileRole: { color: colors.primary, fontSize: 16, marginTop: 4, fontWeight: "600" },
-  profileBranch: { color: colors.muted, fontSize: 14, marginTop: 4 },
-  logoutBtn: { marginTop: 40, backgroundColor: "#ff444433", paddingVertical: 12, paddingHorizontal: 30, borderRadius: 12, borderWidth: 1, borderColor: "#ff4444" },
-  logoutText: { color: "#ff4444", fontWeight: "bold", fontSize: 16 }
+  center: { flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center" }
 });

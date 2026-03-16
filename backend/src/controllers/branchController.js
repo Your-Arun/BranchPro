@@ -16,14 +16,16 @@ const decorateWithActiveDispatches = async (branches) => {
 
 export const getBranches = async (req, res, next) => {
   try {
-    // Admins see branches of their company
-    const query = req.user.role === "ADMIN" ? { companyId: req.user.companyId } : { _id: req.user.branchId };
-    
-    if (!req.user.companyId && req.user.role === "ADMIN") {
-        return res.json([]);
+    const companyId = req.user.companyId;
+
+    if (!companyId) {
+      // Admin with no company yet, or unaffiliated user
+      return res.json([]);
     }
 
-    const branches = await Branch.find(query).sort({ name: 1 }).lean();
+    // Both ADMIN and STAFF see all branches of their company
+    // ADMIN: manages them | STAFF: needs the list to pick a "To Branch"
+    const branches = await Branch.find({ companyId }).sort({ name: 1 }).lean();
     res.json(await decorateWithActiveDispatches(branches));
   } catch (error) {
     next(error);

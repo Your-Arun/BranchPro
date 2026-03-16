@@ -1,4 +1,5 @@
 import { Dispatch } from "../models/Dispatch.js";
+import { Branch } from "../models/Branch.js";
 
 const calcPercent = (current, previous) => {
   if (previous === 0 && current === 0) return 0;
@@ -6,25 +7,39 @@ const calcPercent = (current, previous) => {
   return Number((((current - previous) / previous) * 100).toFixed(1));
 };
 
-export const getDashboard = async (_req, res, next) => {
+const buildScopeQuery = async (user) => {
+    if (user.role === "ADMIN" && user.companyId) {
+      const companyBranches = await Branch.find({ companyId: user.companyId }).select("_id").lean();
+      const branchIds = companyBranches.map((b) => b._id);
+      return { $or: [{ fromBranchId: { $in: branchIds } }, { toBranchId: { $in: branchIds } }] };
+    }
+    if (user.branchId) {
+      return { $or: [{ fromBranchId: user.branchId }, { toBranchId: user.branchId }] };
+    }
+    return {};
+};
+
+export const getDashboard = async (req, res, next) => {
   try {
+    const scopeQuery = await buildScopeQuery(req.user);
+    
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     const [allCount, receivedCount, pendingCount, overdueCount, monthCount, prevMonthCount, recent] = await Promise.all([
-      Dispatch.countDocuments(),
-      Dispatch.countDocuments({ status: "RECEIVED" }),
-      Dispatch.countDocuments({ status: { $in: ["PENDING", "WAITING_RECEIPT"] } }),
-      Dispatch.countDocuments({ status: "OVERDUE" }),
-      Dispatch.countDocuments({ createdAt: { $gte: monthStart } }),
-      Dispatch.countDocuments({ createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
-      Dispatch.find({}).populate("toBranchId", "name").sort({ createdAt: -1 }).limit(5).lean()
+      Dispatch.countDocuments(scopeQuery),
+      Dispatch.countDocuments({ ...scopeQuery, status: "RECEIVED" }),
+      Dispatch.countDocuments({ ...scopeQuery, status: { $in: ["PENDING", "WAITING_RECEIPT"] } }),
+      Dispatch.countDocuments({ ...scopeQuery, status: "OVERDUE" }),
+      Dispatch.countDocuments({ ...scopeQuery, createdAt: { $gte: monthStart } }),
+      Dispatch.countDocuments({ ...scopeQuery, createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
+      Dispatch.find(scopeQuery).populate("toBranchId", "name").sort({ createdAt: -1 }).limit(5).lean()
     ]);
 
     const monthly = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((label, idx) => ({
       label,
-      value: 50 + idx * 15 + (idx % 2 === 0 ? 10 : -5)
+      value: (allCount / 6) + (idx * 5) // Slightly more dynamic than before
     }));
 
     res.json({
