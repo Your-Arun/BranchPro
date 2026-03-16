@@ -1,21 +1,30 @@
+import { Branch } from "../models/Branch.js";
 import { User } from "../models/User.js";
 
-export const getUsers = async (_req, res, next) => {
-  try {
-    const users = await User.find({}).populate("branchId", "name code city").sort({ fullName: 1 }).lean();
+const formatUser = (u) => ({
+  _id: u._id,
+  fullName: u.fullName,
+  email: u.email,
+  role: u.role,
+  phone: u.phone,
+  avatarUrl: u.avatarUrl,
+  branchId: u.branchId || null,       // Populated object: { _id, name, code, city }
+  companyId: u.companyId || null,
+});
 
-    res.json(
-      users.map((u) => ({
-        _id: u._id,
-        fullName: u.fullName,
-        email: u.email,
-        role: u.role,
-        avatarUrl: u.avatarUrl,
-        branchName: u.branchId?.name ?? "",
-        branchId: u.branchId?._id ?? null,
-        branch: u.branchId || null
-      }))
-    );
+export const getUsers = async (req, res, next) => {
+  try {
+    // Admins only see users in their own company
+    const query = req.user.companyId
+      ? { companyId: req.user.companyId }
+      : { _id: req.user._id }; // Fallback: only self
+
+    const users = await User.find(query)
+      .populate("branchId", "name code city")
+      .sort({ fullName: 1 })
+      .lean();
+
+    res.json(users.map(formatUser));
   } catch (error) {
     next(error);
   }
@@ -28,9 +37,14 @@ export const createUser = async (req, res, next) => {
     if (!fullName || !email || !password || !branchId) {
       return res.status(400).json({ message: "fullName, email, password and branchId are required" });
     }
-
     if (!["ADMIN", "STAFF"].includes(role)) {
       return res.status(400).json({ message: "Role must be ADMIN or STAFF" });
+    }
+
+    // Ensure branch belongs to this admin's company
+    const branch = await Branch.findOne({ _id: branchId, companyId: req.user.companyId });
+    if (!branch) {
+      return res.status(400).json({ message: "Branch not found or not in your company" });
     }
 
     const userExists = await User.findOne({ email: email.toLowerCase() });
@@ -40,24 +54,18 @@ export const createUser = async (req, res, next) => {
 
     const newUser = await User.create({
       fullName,
-      email,
+      email: email.toLowerCase(),
       password,
       role,
-      branchId
+      branchId,
+      companyId: req.user.companyId,
     });
 
-    const populatedUser = await User.findById(newUser._id).populate("branchId", "name code city").lean();
+    const populatedUser = await User.findById(newUser._id)
+      .populate("branchId", "name code city")
+      .lean();
 
-    res.status(201).json({
-      _id: populatedUser._id,
-      fullName: populatedUser.fullName,
-      email: populatedUser.email,
-      role: populatedUser.role,
-      avatarUrl: populatedUser.avatarUrl,
-      branchName: populatedUser.branchId?.name ?? "",
-      branchId: populatedUser.branchId?._id ?? null,
-      branch: populatedUser.branchId || null
-    });
+    res.status(201).json(formatUser(populatedUser));
   } catch (error) {
     next(error);
   }
@@ -66,17 +74,18 @@ export const createUser = async (req, res, next) => {
 export const updateUser = async (req, res, next) => {
   try {
     const { fullName, email, password, role, branchId } = req.body;
-    
-    const user = await User.findById(req.params.id);
+
+    // Admin can only update users in their company
+    const user = await User.findOne({ _id: req.params.id, companyId: req.user.companyId });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found or unauthorized" });
     }
 
     if (fullName) user.fullName = fullName;
     if (email) {
       const emailExists = await User.findOne({ email: email.toLowerCase(), _id: { $ne: user._id } });
       if (emailExists) return res.status(400).json({ message: "Email already taken" });
-      user.email = email;
+      user.email = email.toLowerCase();
     }
     if (password) user.password = password;
     if (role && ["ADMIN", "STAFF"].includes(role)) user.role = role;
@@ -84,18 +93,11 @@ export const updateUser = async (req, res, next) => {
 
     await user.save();
 
-    const populatedUser = await User.findById(user._id).populate("branchId", "name code city").lean();
+    const populatedUser = await User.findById(user._id)
+      .populate("branchId", "name code city")
+      .lean();
 
-    res.json({
-      _id: populatedUser._id,
-      fullName: populatedUser.fullName,
-      email: populatedUser.email,
-      role: populatedUser.role,
-      avatarUrl: populatedUser.avatarUrl,
-      branchName: populatedUser.branchId?.name ?? "",
-      branchId: populatedUser.branchId?._id ?? null,
-      branch: populatedUser.branchId || null
-    });
+    res.json(formatUser(populatedUser));
   } catch (error) {
     next(error);
   }
@@ -103,15 +105,13 @@ export const updateUser = async (req, res, next) => {
 
 export const deleteUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    // Admin can only delete users in their company
+    const user = await User.findOne({ _id: req.params.id, companyId: req.user.companyId });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found or unauthorized" });
     }
-    if (user.role === "ADMIN") {
-      const adminCount = await User.countDocuments({ role: "ADMIN" });
-      if (adminCount <= 1) {
-        return res.status(400).json({ message: "Cannot delete the only admin" });
-      }
+    if (user._id.equals(req.user._id)) {
+      return res.status(400).json({ message: "You cannot delete your own account" });
     }
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "User removed" });

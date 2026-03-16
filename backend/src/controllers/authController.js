@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
+import { Branch } from "../models/Branch.js";
+import { Company } from "../models/Company.js";
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET || "branchflow_secret_key", {
@@ -8,10 +10,15 @@ const generateToken = (id) =>
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { fullName, email, password, branchId, phone, companyName } = req.body;
+    const { fullName, email, password, registrationKey, phone } = req.body;
 
-    if (!fullName || !email || !password || !branchId) {
-      return res.status(400).json({ message: "fullName, email, password and branchId are required" });
+    if (!fullName || !email || !password || !registrationKey) {
+      return res.status(400).json({ message: "fullName, email, password and registrationKey are required" });
+    }
+
+    const branch = await Branch.findOne({ registrationKey });
+    if (!branch) {
+      return res.status(400).json({ message: "Invalid registration key" });
     }
 
     const userExists = await User.findOne({ email: email.toLowerCase() });
@@ -21,15 +28,17 @@ export const registerUser = async (req, res, next) => {
 
     const user = await User.create({
       fullName,
-      email,
+      email: email.toLowerCase(),
       password,
-      branchId,
-      phone,
-      companyName,
-      role: "STAFF"
+      role: "STAFF",
+      branchId: branch._id,
+      companyId: branch.companyId,
+      phone: phone || ""
     });
 
-    const populatedUser = await User.findById(user._id).populate("branchId", "name code city");
+    const populatedUser = await User.findById(user._id)
+      .populate("branchId", "name code city")
+      .populate("companyId", "name email phone");
 
     res.status(201).json({
       _id: populatedUser._id,
@@ -37,7 +46,7 @@ export const registerUser = async (req, res, next) => {
       email: populatedUser.email,
       role: populatedUser.role,
       phone: populatedUser.phone,
-      companyName: populatedUser.companyName,
+      company: populatedUser.companyId,
       branch: populatedUser.branchId,
       token: generateToken(populatedUser._id)
     });
@@ -48,10 +57,10 @@ export const registerUser = async (req, res, next) => {
 
 export const adminRegister = async (req, res, next) => {
   try {
-    const { fullName, email, password, phone, companyName } = req.body;
+    const { fullName, email, password, phone } = req.body;
 
-    if (!fullName || !email || !password || !companyName) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ message: "Full Name, Email and Password are required" });
     }
 
     const userExists = await User.findOne({ email: email.toLowerCase() });
@@ -61,10 +70,9 @@ export const adminRegister = async (req, res, next) => {
 
     const user = await User.create({
       fullName,
-      email,
+      email: email.toLowerCase(),
       password,
-      phone,
-      companyName,
+      phone: phone || "",
       role: "ADMIN"
     });
 
@@ -73,8 +81,6 @@ export const adminRegister = async (req, res, next) => {
       fullName: user.fullName,
       email: user.email,
       role: user.role,
-      phone: user.phone,
-      companyName: user.companyName,
       token: generateToken(user._id)
     });
   } catch (error) {
@@ -90,7 +96,9 @@ export const loginUser = async (req, res, next) => {
       return res.status(400).json({ message: "email and password are required" });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).populate("branchId", "name code city");
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .populate("branchId", "name code city")
+      .populate("companyId", "name email phone");
 
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -102,7 +110,7 @@ export const loginUser = async (req, res, next) => {
       email: user.email,
       role: user.role,
       phone: user.phone,
-      companyName: user.companyName,
+      company: user.companyId,
       branch: user.branchId,
       token: generateToken(user._id)
     });

@@ -6,6 +6,7 @@ const AppDataContext = createContext(null);
 
 export const AppDataProvider = ({ children }) => {
   // Data States
+  const [company, setCompany] = useState(null);
   const [dashboard, setDashboard] = useState(null);
   const [dispatches, setDispatches] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -17,7 +18,7 @@ export const AppDataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState("");
 
-  // 1. Initial Auth Check (App start hote hi bas ek baar chalega)
+  // 1. Initial Auth Check
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -30,25 +31,34 @@ export const AppDataProvider = ({ children }) => {
       } catch (e) {
         console.error("Auth init failed", e);
       } finally {
-        setLoading(false); // Check complete hone ke baad loading false
+        setLoading(false);
       }
     };
     initAuth();
   },[]);
 
-  // 2. Fetch Data Logic (Sirf tab fetch hoga jab user logged in ho)
+  // 2. Fetch Data Logic
   const loadAll = useCallback(async () => {
-    if (!userAuth) return; // Agar login nahi hai toh return kar jao
+    if (!userAuth) return;
     
     try {
       setLoading(true);
       setError("");
 
+      // Fetch company first
+      try {
+          const compRes = await api.get("/admin/company");
+          setCompany(compRes.data);
+      } catch (e) {
+          if (e.response?.status === 404) setCompany(null);
+          else throw e;
+      }
+
       const[dashboardRes, dispatchRes, branchRes, userRes, reportRes] = await Promise.all([
         api.get("/dashboard").catch(() => ({ data: null })),
-        api.get("/admin/dispatches").catch((e) => api.get("/dispatches")), // fallback to normal if not available
-        api.get("/admin/branches").catch((e) => api.get("/branches")),
-        api.get("/admin/users").catch((e) => api.get("/users")),
+        api.get("/admin/dispatches").catch(() => api.get("/dispatches")),
+        api.get("/admin/branches").catch(() => api.get("/branches")),
+        api.get("/admin/users").catch(() => api.get("/users")),
         api.get("/reports").catch(() => ({ data: null }))
       ]);
 
@@ -64,7 +74,6 @@ export const AppDataProvider = ({ children }) => {
     }
   }, [userAuth]);
 
-  // 3. Automatically fetch data when userAuth changes (Login hone par)
   useEffect(() => {
     if (userAuth) {
       loadAll();
@@ -74,33 +83,32 @@ export const AppDataProvider = ({ children }) => {
   const login = async (email, password) => {
     const { data } = await api.post("/auth/login", { email, password });
     if (data.role !== "ADMIN") {
-      throw new Error("Only ADMIN can access Admin Panel");
+      // Clear any token that was set
+      delete api.defaults.headers.common["Authorization"];
+      throw { message: "This app is for Admins only. Please use the Staff App to log in.", response: { data: { message: "Admin access only" } } };
     }
-    api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
-    await AsyncStorage.setItem("userInfo", JSON.stringify(data));
-    setUserAuth(data); // Ye state update hote hi automatically loadAll trigger ho jayega
+    await setAuthState(data);
   };
 
-  const register = async (userData) => {
-    const { data } = await api.post("/auth/register", userData);
+  const setAuthState = async (data) => {
     api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     await AsyncStorage.setItem("userInfo", JSON.stringify(data));
-    setUserAuth(data); // State update hote hi automatically loadAll() chal jayega
+    setUserAuth(data);
   };
-  const adminCreateUser = useCallback(async (userData) => {
-    const { data } = await api.post("/admin/users", userData);
-    // Naye user ko list me sabse upar add kar do UI update karne ke liye
-    setUsers((prev) => [data, ...prev]);
+
+  const setupCompany = async (companyData) => {
+    const { data } = await api.post("/admin/company", companyData);
+    setCompany(data);
+    await loadAll();
     return data;
-  },[]);
+  };
 
-  // 5. Logout Function
   const logout = async () => {
     setUserAuth(null);
+    setCompany(null);
     delete api.defaults.headers.common["Authorization"];
     await AsyncStorage.removeItem("userInfo");
     
-    // Clear data so next user doesn't see old data
     setDashboard(null);
     setDispatches([]);
     setBranches([]);
@@ -120,11 +128,19 @@ export const AppDataProvider = ({ children }) => {
     return data;
   },[]);
 
+  const adminCreateUser = useCallback(async (userData) => {
+    const { data } = await api.post("/admin/users", userData);
+    setUsers((prev) => [data, ...prev]);
+    return data;
+  },[]);
+
   const value = useMemo(
     () => ({
       userAuth, 
+      company,
       login,    
-      register,
+      setAuthState,
+      setupCompany,
       logout, 
       loading,
       error,
@@ -137,7 +153,7 @@ export const AppDataProvider = ({ children }) => {
       createDispatch,
       updateStatus,
       adminCreateUser
-    }),[userAuth, loading, error, dashboard, dispatches, branches, users, reports, loadAll, createDispatch, updateStatus]
+    }),[userAuth, company, loading, error, dashboard, dispatches, branches, users, reports, loadAll, createDispatch, updateStatus]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

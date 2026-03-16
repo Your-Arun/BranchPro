@@ -28,12 +28,27 @@ const toDto = (dispatch) => ({
   createdAt: dispatch.createdAt
 });
 
+// Build query scoped to a user's branch (STAFF) or company branches (ADMIN)
+const buildScopeQuery = async (user) => {
+  if (user.role === "ADMIN" && user.companyId) {
+    const companyBranches = await Branch.find({ companyId: user.companyId }).select("_id").lean();
+    const branchIds = companyBranches.map((b) => b._id);
+    return { $or: [{ fromBranchId: { $in: branchIds } }, { toBranchId: { $in: branchIds } }] };
+  }
+  if (user.branchId) {
+    return { $or: [{ fromBranchId: user.branchId }, { toBranchId: user.branchId }] };
+  }
+  return {}; // fallback — shouldn't normally reach here
+};
+
 export const listDispatches = async (req, res, next) => {
   try {
     const { status = "ALL", q = "" } = req.query;
     const statusFilter = statusMap[status] ?? null;
 
-    const query = statusFilter ? { status: statusFilter } : {};
+    const scopeQuery = await buildScopeQuery(req.user);
+    const query = statusFilter ? { ...scopeQuery, status: statusFilter } : scopeQuery;
+
     const dispatches = await Dispatch.find(query)
       .populate("fromBranchId", "name")
       .populate("toBranchId", "name")

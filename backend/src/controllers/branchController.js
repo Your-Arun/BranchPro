@@ -1,5 +1,8 @@
 import { Branch } from "../models/Branch.js";
 import { Dispatch } from "../models/Dispatch.js";
+import { User } from "../models/User.js";
+
+const generateKey = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
 const decorateWithActiveDispatches = async (branches) => {
   const activeDispatches = await Dispatch.aggregate([
@@ -11,9 +14,16 @@ const decorateWithActiveDispatches = async (branches) => {
   return branches.map((b) => ({ ...b, activeDispatches: countMap.get(String(b._id)) ?? 0 }));
 };
 
-export const getBranches = async (_req, res, next) => {
+export const getBranches = async (req, res, next) => {
   try {
-    const branches = await Branch.find({}).sort({ name: 1 }).lean();
+    // Admins see branches of their company
+    const query = req.user.role === "ADMIN" ? { companyId: req.user.companyId } : { _id: req.user.branchId };
+    
+    if (!req.user.companyId && req.user.role === "ADMIN") {
+        return res.json([]);
+    }
+
+    const branches = await Branch.find(query).sort({ name: 1 }).lean();
     res.json(await decorateWithActiveDispatches(branches));
   } catch (error) {
     next(error);
@@ -27,9 +37,21 @@ export const createBranch = async (req, res, next) => {
       return res.status(400).json({ message: "name, city, address and code are required" });
     }
 
-    const exists = await Branch.findOne({ code: code.trim().toUpperCase() });
-    if (exists) {
+    if (!req.user.companyId) {
+        return res.status(400).json({ message: "Create a company first" });
+    }
+
+    const codeExists = await Branch.findOne({ code: code.trim().toUpperCase() });
+    if (codeExists) {
       return res.status(400).json({ message: "Branch code already exists" });
+    }
+
+    // Generate unique registration key
+    let registrationKey;
+    while (true) {
+        registrationKey = generateKey();
+        const keyExists = await Branch.findOne({ registrationKey });
+        if (!keyExists) break;
     }
 
     const branch = await Branch.create({
@@ -37,6 +59,8 @@ export const createBranch = async (req, res, next) => {
       city,
       address,
       code: code.trim().toUpperCase(),
+      registrationKey,
+      companyId: req.user.companyId,
       status
     });
 
@@ -49,6 +73,11 @@ export const createBranch = async (req, res, next) => {
 export const updateBranch = async (req, res, next) => {
   try {
     const { name, city, address, code, status } = req.body;
+
+    const branch = await Branch.findOne({ _id: req.params.id, companyId: req.user.companyId });
+    if (!branch) {
+      return res.status(404).json({ message: "Branch not found or unauthorized" });
+    }
 
     if (code) {
       const existing = await Branch.findOne({ code: code.trim().toUpperCase(), _id: { $ne: req.params.id } });
@@ -69,10 +98,6 @@ export const updateBranch = async (req, res, next) => {
       { new: true }
     );
 
-    if (!updated) {
-      return res.status(404).json({ message: "Branch not found" });
-    }
-
     res.json(updated);
   } catch (error) {
     next(error);
@@ -81,6 +106,11 @@ export const updateBranch = async (req, res, next) => {
 
 export const deleteBranch = async (req, res, next) => {
   try {
+    const branch = await Branch.findOne({ _id: req.params.id, companyId: req.user.companyId });
+    if (!branch) {
+      return res.status(404).json({ message: "Branch not found or unauthorized" });
+    }
+
     const inUse = await Dispatch.countDocuments({
       $or: [{ fromBranchId: req.params.id }, { toBranchId: req.params.id }]
     });
@@ -89,11 +119,7 @@ export const deleteBranch = async (req, res, next) => {
       return res.status(400).json({ message: "Cannot delete branch with dispatch history" });
     }
 
-    const deleted = await Branch.findByIdAndDelete(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ message: "Branch not found" });
-    }
-
+    await Branch.findByIdAndDelete(req.params.id);
     res.json({ message: "Branch deleted" });
   } catch (error) {
     next(error);

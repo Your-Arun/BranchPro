@@ -1,27 +1,39 @@
+import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { colors } from "../theme/colors";
-import { BranchesScreen } from "../screens/BranchesScreen";
 import { CreateDispatchScreen } from "../screens/CreateDispatchScreen";
 import { DashboardScreen } from "../screens/DashboardScreen";
 import { DispatchDetailsScreen } from "../screens/DispatchDetailsScreen";
 import { IncomingScreen } from "../screens/IncomingScreen";
-import { ReportsScreen } from "../screens/ReportsScreen";
-import { UsersSettingsScreen } from "../screens/UsersSettingsScreen";
 import { LoginScreen } from "../screens/LoginScreen";
 import { SignupScreen } from "../screens/SignupScreen";
 import { useAppData } from "../utils/AppDataContext";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// MainTabs ko userRole pass kiya
-const MainTabs = ({ userRole }) => {
-  // Check karte hain ki user Admin ya Manager hai kya
-  const isAdmin = userRole === "ADMIN";
+// Simple Profile Screen for Logout
+const ProfileScreen = () => {
+  const { userAuth, logout } = useAppData();
+  return (
+    <View style={styles.profileContainer}>
+      <Ionicons name="person-circle" size={80} color={colors.primary} />
+      <Text style={styles.profileName}>{userAuth?.fullName}</Text>
+      <Text style={styles.profileRole}>{userAuth?.role}</Text>
+      <Text style={styles.profileBranch}>{userAuth?.branch?.name || "No Branch"}</Text>
+      
+      <Pressable style={styles.logoutBtn} onPress={logout}>
+        <Text style={styles.logoutText}>Log Out</Text>
+      </Pressable>
+    </View>
+  );
+};
 
+const MainTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -34,9 +46,7 @@ const MainTabs = ({ userRole }) => {
             Dashboard: "grid",
             Incoming: "download",
             Dispatch: "add",
-            Branches: "business",
-            Reports: "stats-chart",
-            Settings: "settings"
+            Profile: "person"
           };
 
           if (route.name === "Dispatch") {
@@ -62,19 +72,10 @@ const MainTabs = ({ userRole }) => {
         }
       })}
     >
-      {/* ---------------- COMMON TABS (Dono ko dikhenge) ---------------- */}
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Incoming" component={IncomingScreen} options={{ tabBarLabel: "In (Receive)" }} />
-      <Tab.Screen name="Dispatch" component={CreateDispatchScreen} options={{ tabBarLabel: "Out (Send)" }} />
-
-      {/* ---------------- ADMIN ONLY TABS ---------------- */}
-      {isAdmin && (
-        <>
-          <Tab.Screen name="Branches" component={BranchesScreen} />
-          <Tab.Screen name="Reports" component={ReportsScreen} />
-          <Tab.Screen name="Settings" component={UsersSettingsScreen} />
-        </>
-      )}
+      <Tab.Screen name="Incoming" component={IncomingScreen} options={{ tabBarLabel: "Receive" }} />
+      <Tab.Screen name="Dispatch" component={CreateDispatchScreen} options={{ tabBarLabel: "Send" }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
@@ -86,10 +87,7 @@ export const RootNavigator = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {userAuth ? (
         <>
-          {/* MainTabs ko user ka role bhej rahe hain */}
-          <Stack.Screen name="Main">
-            {() => <MainTabs userRole={userAuth.role} />}
-          </Stack.Screen>
+          <Stack.Screen name="Main" component={MainTabs} />
           <Stack.Screen
             name="DispatchDetails"
             component={DispatchDetailsScreen}
@@ -105,3 +103,12 @@ export const RootNavigator = () => {
     </Stack.Navigator>
   );
 };
+
+const styles = StyleSheet.create({
+  profileContainer: { flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center", padding: 20 },
+  profileName: { color: colors.text, fontSize: 24, fontWeight: "bold", marginTop: 10 },
+  profileRole: { color: colors.primary, fontSize: 16, marginTop: 4, fontWeight: "600" },
+  profileBranch: { color: colors.muted, fontSize: 14, marginTop: 4 },
+  logoutBtn: { marginTop: 40, backgroundColor: "#ff444433", paddingVertical: 12, paddingHorizontal: 30, borderRadius: 12, borderWidth: 1, borderColor: "#ff4444" },
+  logoutText: { color: "#ff4444", fontWeight: "bold", fontSize: 16 }
+});

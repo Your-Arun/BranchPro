@@ -23,6 +23,8 @@ export default function App() {
     const raw = localStorage.getItem("admin_profile");
     return raw ? JSON.parse(raw) : null;
   });
+  const [company, setCompany] = useState(null);
+  const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +32,9 @@ export default function App() {
   const [users, setUsers] = useState([]);
   const [dispatches, setDispatches] = useState([]);
 
-  const [loginForm, setLoginForm] = useState({ email: "alex.rivera@branchflow.pro", password: "Admin@123" });
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [signupForm, setSignupForm] = useState({ fullName: "", email: "", password: "", phone: "" });
+  const [companyForm, setCompanyForm] = useState({ name: "", phone: "", email: "" });
   const [branchForm, setBranchForm] = useState({ name: "", city: "", address: "", code: "", status: "ACTIVE" });
   const [editingBranchId, setEditingBranchId] = useState("");
   const [userForm, setUserForm] = useState({ fullName: "", email: "", password: "", role: "STAFF", branchId: "" });
@@ -39,14 +43,27 @@ export default function App() {
   const isLoggedIn = Boolean(token && profile?.role === "ADMIN");
 
   const loadAdminData = async (authToken = token) => {
-    const [b, u, d] = await Promise.all([
-      request("/admin/branches", { token: authToken }),
-      request("/admin/users", { token: authToken }),
-      request("/admin/dispatches", { token: authToken })
-    ]);
-    setBranches(b);
-    setUsers(u);
-    setDispatches(d);
+    try {
+        const comp = await request("/admin/company", { token: authToken });
+        setCompany(comp);
+        
+        if (comp) {
+            const [b, u, d] = await Promise.all([
+                request("/admin/branches", { token: authToken }),
+                request("/admin/users", { token: authToken }),
+                request("/admin/dispatches", { token: authToken })
+            ]);
+            setBranches(b);
+            setUsers(u);
+            setDispatches(d);
+        }
+    } catch (e) {
+        if (e.message.includes("Company not found")) {
+            setCompany(null);
+        } else {
+            setError(e.message);
+        }
+    }
   };
 
   useEffect(() => {
@@ -63,10 +80,7 @@ export default function App() {
       if (data.role !== "ADMIN") {
         throw new Error("Only ADMIN can access admin panel");
       }
-      setToken(data.token);
-      setProfile(data);
-      localStorage.setItem("admin_token", data.token);
-      localStorage.setItem("admin_profile", JSON.stringify(data));
+      saveSession(data);
       await loadAdminData(data.token);
     } catch (e2) {
       setError(e2.message);
@@ -75,14 +89,52 @@ export default function App() {
     }
   };
 
+  const onSignup = async (e) => {
+    e.preventDefault();
+    try {
+      setError("");
+      setLoading(true);
+      const data = await request("/auth/admin-signup", { method: "POST", body: signupForm });
+      saveSession(data);
+      setIsRegistering(false);
+    } catch (e2) {
+      setError(e2.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveSession = (data) => {
+    setToken(data.token);
+    setProfile(data);
+    localStorage.setItem("admin_token", data.token);
+    localStorage.setItem("admin_profile", JSON.stringify(data));
+  };
+
   const onLogout = () => {
     setToken("");
     setProfile(null);
+    setCompany(null);
     setBranches([]);
     setUsers([]);
     setDispatches([]);
     localStorage.removeItem("admin_token");
     localStorage.removeItem("admin_profile");
+  };
+
+  const onCompanySubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setError("");
+      setLoading(true);
+      const data = await request("/admin/company", { method: "POST", token, body: companyForm });
+      setCompany(data);
+      await loadAdminData();
+    } catch (e2) {
+      setError(e2.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onBranchSubmit = async (e) => {
@@ -179,24 +231,42 @@ export default function App() {
   if (!isLoggedIn) {
     return (
       <div className="page center">
-        <form className="card login" onSubmit={onLogin}>
-          <h1>BranchFlow Admin Panel</h1>
-          <p>Login with ADMIN account</p>
-          <input
-            type="email"
-            placeholder="Email"
-            value={loginForm.email}
-            onChange={(e) => setLoginForm((s) => ({ ...s, email: e.target.value }))}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={loginForm.password}
-            onChange={(e) => setLoginForm((s) => ({ ...s, password: e.target.value }))}
-            required
-          />
-          <button type="submit" disabled={loading}>{loading ? "Logging in..." : "Login"}</button>
+        {isRegistering ? (
+          <form className="card login" onSubmit={onSignup}>
+            <h1>Admin Signup</h1>
+            <input placeholder="Full Name" value={signupForm.fullName} onChange={(e) => setSignupForm(s => ({ ...s, fullName: e.target.value }))} required />
+            <input type="email" placeholder="Email" value={signupForm.email} onChange={(e) => setSignupForm(s => ({ ...s, email: e.target.value }))} required />
+            <input type="password" placeholder="Password" value={signupForm.password} onChange={(e) => setSignupForm(s => ({ ...s, password: e.target.value }))} required />
+            <input placeholder="Phone" value={signupForm.phone} onChange={(e) => setSignupForm(s => ({ ...s, phone: e.target.value }))} />
+            <button type="submit" disabled={loading}>{loading ? "Signing up..." : "Signup"}</button>
+            <button type="button" className="text-btn" onClick={() => setIsRegistering(false)}>Already have an account? Login</button>
+            {error ? <div className="error">{error}</div> : null}
+          </form>
+        ) : (
+          <form className="card login" onSubmit={onLogin}>
+            <h1>BranchFlow Admin</h1>
+            <input type="email" placeholder="Email" value={loginForm.email} onChange={(e) => setLoginForm(s => ({ ...s, email: e.target.value }))} required />
+            <input type="password" placeholder="Password" value={loginForm.password} onChange={(e) => setLoginForm(s => ({ ...s, password: e.target.value }))} required />
+            <button type="submit" disabled={loading}>{loading ? "Logging in..." : "Login"}</button>
+            <button type="button" className="text-btn" onClick={() => setIsRegistering(true)}>New Admin? Create Account</button>
+            {error ? <div className="error">{error}</div> : null}
+          </form>
+        )}
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="page center">
+        <form className="card login" onSubmit={onCompanySubmit}>
+          <h1>Welcome, {profile.fullName}</h1>
+          <p>Please setup your company details to continue</p>
+          <input placeholder="Company Name" value={companyForm.name} onChange={(e) => setCompanyForm(s => ({ ...s, name: e.target.value }))} required />
+          <input placeholder="Company Email" type="email" value={companyForm.email} onChange={(e) => setCompanyForm(s => ({ ...s, email: e.target.value }))} required />
+          <input placeholder="Company Phone" value={companyForm.phone} onChange={(e) => setCompanyForm(s => ({ ...s, phone: e.target.value }))} required />
+          <button type="submit" disabled={loading}>{loading ? "Setting up..." : "Create Company"}</button>
+          <button type="button" className="text-btn" onClick={onLogout}>Logout</button>
           {error ? <div className="error">{error}</div> : null}
         </form>
       </div>
@@ -207,8 +277,8 @@ export default function App() {
     <div className="page">
       <header className="topbar">
         <div>
-          <h2>Welcome, {profile.fullName}</h2>
-          <small>Role: {profile.role}</small>
+          <h2>{company.name} Dashboard</h2>
+          <small>Admin: {profile.fullName}</small>
         </div>
         <button onClick={onLogout}>Logout</button>
       </header>
@@ -259,6 +329,7 @@ export default function App() {
             <tr>
               <th>Name</th>
               <th>Code</th>
+              <th>Key (Share with User)</th>
               <th>City</th>
               <th>Status</th>
               <th>Action</th>
@@ -269,6 +340,7 @@ export default function App() {
               <tr key={b._id}>
                 <td>{b.name}</td>
                 <td>{b.code}</td>
+                <td style={{ fontWeight: "bold", color: "#007bff" }}>{b.registrationKey}</td>
                 <td>{b.city}</td>
                 <td>{b.status}</td>
                 <td>
@@ -281,6 +353,7 @@ export default function App() {
         </table>
       </section>
 
+      {/* Users and Dispatches tables remain same but filtered */}
       <section className="card">
         <h3>Users</h3>
         <table>
@@ -299,7 +372,7 @@ export default function App() {
                 <td>{u.fullName}</td>
                 <td>{u.email}</td>
                 <td>{u.role}</td>
-                <td>{u.branchName}</td>
+                <td>{u.branchId?.name}</td>
                 <td>
                   <button onClick={() => startEditUser(u)}>Edit</button>
                   <button className="danger" onClick={() => onDeleteUser(u._id)}>Delete</button>
@@ -327,8 +400,8 @@ export default function App() {
             {dispatches.map((d) => (
               <tr key={d._id}>
                 <td>{d.trackingId}</td>
-                <td>{d.fromBranch}</td>
-                <td>{d.toBranch}</td>
+                <td>{d.fromBranch?.name}</td>
+                <td>{d.toBranch?.name}</td>
                 <td>{d.status}</td>
                 <td>{new Date(d.dispatchDate).toLocaleDateString()}</td>
                 <td>

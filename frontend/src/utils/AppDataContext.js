@@ -17,7 +17,7 @@ export const AppDataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState("");
 
-  // 1. Initial Auth Check (App start hote hi bas ek baar chalega)
+  // 1. Initial Auth Check
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -30,26 +30,26 @@ export const AppDataProvider = ({ children }) => {
       } catch (e) {
         console.error("Auth init failed", e);
       } finally {
-        setLoading(false); // Check complete hone ke baad loading false
+        setLoading(false);
       }
     };
     initAuth();
   },[]);
 
-  // 2. Fetch Data Logic (Sirf tab fetch hoga jab user logged in ho)
+  // 2. Fetch Data Logic
   const loadAll = useCallback(async () => {
-    if (!userAuth) return; // Agar login nahi hai toh return kar jao
+    if (!userAuth) return;
     
     try {
       setLoading(true);
       setError("");
 
       const[dashboardRes, dispatchRes, branchRes, userRes, reportRes] = await Promise.all([
-        api.get("/dashboard"),
-        api.get("/dispatches"),
-        api.get("/branches"),
-        api.get("/users"),
-        api.get("/reports")
+        api.get("/dashboard").catch(() => ({ data: null })),
+        api.get("/dispatches").catch(() => ({ data: [] })),
+        api.get("/branches").catch(() => ({ data: [] })),
+        api.get("/users").catch(() => ({ data: [] })),
+        api.get("/reports").catch(() => ({ data: null }))
       ]);
 
       setDashboard(dashboardRes.data);
@@ -64,41 +64,32 @@ export const AppDataProvider = ({ children }) => {
     }
   }, [userAuth]);
 
-  // 3. Automatically fetch data when userAuth changes (Login hone par)
   useEffect(() => {
     if (userAuth) {
       loadAll();
     }
   }, [userAuth, loadAll]);
 
-  // 4. Login Function
+  const setAuthState = async (data) => {
+    api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+    await AsyncStorage.setItem("userInfo", JSON.stringify(data));
+    setUserAuth(data);
+  };
+
   const login = async (email, password) => {
     const { data } = await api.post("/auth/login", { email, password });
-    api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
-    await AsyncStorage.setItem("userInfo", JSON.stringify(data));
-    setUserAuth(data); // Ye state update hote hi automatically loadAll trigger ho jayega
+    if (data.role === "ADMIN") {
+      delete api.defaults.headers.common["Authorization"];
+      throw { message: "Admin accounts must use the Admin App.", response: { data: { message: "Use Admin App" } } };
+    }
+    await setAuthState(data);
   };
 
-  const register = async (userData) => {
-    const { data } = await api.post("/auth/register", userData);
-    api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
-    await AsyncStorage.setItem("userInfo", JSON.stringify(data));
-    setUserAuth(data); // State update hote hi automatically loadAll() chal jayega
-  };
-  const adminCreateUser = useCallback(async (userData) => {
-    const { data } = await api.post("/admin/users", userData);
-    // Naye user ko list me sabse upar add kar do UI update karne ke liye
-    setUsers((prev) => [data, ...prev]);
-    return data;
-  },[]);
-
-  // 5. Logout Function
   const logout = async () => {
     setUserAuth(null);
     delete api.defaults.headers.common["Authorization"];
     await AsyncStorage.removeItem("userInfo");
     
-    // Clear data so next user doesn't see old data
     setDashboard(null);
     setDispatches([]);
     setBranches([]);
@@ -122,7 +113,7 @@ export const AppDataProvider = ({ children }) => {
     () => ({
       userAuth, 
       login,    
-      register,
+      setAuthState,
       logout, 
       loading,
       error,
@@ -133,8 +124,7 @@ export const AppDataProvider = ({ children }) => {
       reports,
       refresh: loadAll,
       createDispatch,
-      updateStatus,
-      adminCreateUser
+      updateStatus
     }),[userAuth, loading, error, dashboard, dispatches, branches, users, reports, loadAll, createDispatch, updateStatus]
   );
 

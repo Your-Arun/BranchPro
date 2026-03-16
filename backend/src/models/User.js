@@ -7,8 +7,8 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, trim: true, lowercase: true },
     password: { type: String, required: true },
     phone: { type: String, default: "" },
-    companyName: { type: String, default: "" },
     role: { type: String, enum: ["ADMIN", "STAFF"], default: "STAFF" },
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: false },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: false },
     avatarUrl: { type: String, default: "" }
   },

@@ -7,8 +7,8 @@ import { useAppData } from "../utils/AppDataContext";
 
 export const LoginScreen = ({ navigation }) => {
   const { login } = useAppData();
-  const [email, setEmail] = useState("alex.rivera@branchflow.pro"); 
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState(""); 
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -28,9 +28,9 @@ export const LoginScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.logoWrap}>
-          <Ionicons name="cube" size={60} color={colors.primary} />
+          <Ionicons name="barcode" size={60} color={colors.primary} />
           <Text style={styles.title}>BranchFlow <Text style={{color: colors.primary}}>Pro</Text></Text>
-          <Text style={styles.subtitle}>Enterprise Logistics System</Text>
+          <Text style={styles.subtitle}>Staff Operations Portal</Text>
         </View>
 
         <View style={styles.form}>

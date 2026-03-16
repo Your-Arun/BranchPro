@@ -1,27 +1,27 @@
+import React from "react";
+import { View, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { colors } from "../theme/colors";
 import { BranchesScreen } from "../screens/BranchesScreen";
-import { CreateDispatchScreen } from "../screens/CreateDispatchScreen";
 import { DashboardScreen } from "../screens/DashboardScreen";
 import { DispatchDetailsScreen } from "../screens/DispatchDetailsScreen";
-import { IncomingScreen } from "../screens/IncomingScreen";
 import { ReportsScreen } from "../screens/ReportsScreen";
 import { UsersSettingsScreen } from "../screens/UsersSettingsScreen";
 import { LoginScreen } from "../screens/LoginScreen";
 import { SignupScreen } from "../screens/SignupScreen";
+import { CompanySetupScreen } from "../screens/CompanySetupScreen";
+import { ProfileScreen } from "../screens/ProfileScreen";
 import { useAppData } from "../utils/AppDataContext";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// MainTabs ko userRole pass kiya
-const MainTabs = ({ userRole }) => {
-  // Check karte hain ki user Admin ya Manager hai kya
-  const isAdmin = userRole === "ADMIN";
 
+
+const MainTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -29,73 +29,53 @@ const MainTabs = ({ userRole }) => {
         tabBarStyle: { backgroundColor: "#08152f", borderTopColor: colors.border, height: 72, paddingBottom: 8, paddingTop: 8 },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarIcon: ({ color, size, focused }) => {
+        tabBarIcon: ({ color, size }) => {
           const map = {
-            Dashboard: "grid",
-            Incoming: "download",
-            Dispatch: "add",
+            Overview: "analytics",
             Branches: "business",
+            Staff: "people",
             Reports: "stats-chart",
-            Settings: "settings"
+            Profile: "settings"
           };
-
-          if (route.name === "Dispatch") {
-            return (
-              <Ionicons
-                name={map[route.name]}
-                size={focused ? 30 : 26}
-                color={colors.text}
-                style={{
-                  backgroundColor: colors.primary,
-                  borderRadius: 18,
-                  width: 36,
-                  height: 36,
-                  textAlign: "center",
-                  textAlignVertical: "center",
-                  overflow: "hidden"
-                }}
-              />
-            );
-          }
-
           return <Ionicons name={map[route.name]} size={size} color={color} />;
         }
       })}
     >
-      {/* ---------------- COMMON TABS (Dono ko dikhenge) ---------------- */}
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Incoming" component={IncomingScreen} options={{ tabBarLabel: "In (Receive)" }} />
-      <Tab.Screen name="Dispatch" component={CreateDispatchScreen} options={{ tabBarLabel: "Out (Send)" }} />
-
-      {/* ---------------- ADMIN ONLY TABS ---------------- */}
-      {isAdmin && (
-        <>
-          <Tab.Screen name="Branches" component={BranchesScreen} />
-          <Tab.Screen name="Reports" component={ReportsScreen} />
-          <Tab.Screen name="Settings" component={UsersSettingsScreen} />
-        </>
-      )}
+      <Tab.Screen name="Overview" component={DashboardScreen} />
+      <Tab.Screen name="Branches" component={BranchesScreen} />
+      <Tab.Screen name="Staff" component={UsersSettingsScreen} />
+      <Tab.Screen name="Reports" component={ReportsScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
 
 export const RootNavigator = () => {
-  const { userAuth } = useAppData();
+  const { userAuth, company, loading } = useAppData();
+
+  if (loading && !userAuth) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {userAuth ? (
-        <>
-          {/* MainTabs ko user ka role bhej rahe hain */}
-          <Stack.Screen name="Main">
-            {() => <MainTabs userRole={userAuth.role} />}
-          </Stack.Screen>
-          <Stack.Screen
-            name="DispatchDetails"
-            component={DispatchDetailsScreen}
-            options={{ presentation: "modal" }}
-          />
-        </>
+        !company && userAuth.role === "ADMIN" ? (
+          <Stack.Screen name="CompanySetup" component={CompanySetupScreen} />
+        ) : (
+          <>
+            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen
+              name="DispatchDetails"
+              component={DispatchDetailsScreen}
+              options={{ presentation: "modal" }}
+            />
+          </>
+        )
       ) : (
         <>
           <Stack.Screen name="Login" component={LoginScreen} />
@@ -105,3 +85,5 @@ export const RootNavigator = () => {
     </Stack.Navigator>
   );
 };
+
+

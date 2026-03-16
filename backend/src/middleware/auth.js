@@ -11,7 +11,7 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "branchflow_secret_key");
-    const user = await User.findById(decoded.id).select("_id fullName email role branchId");
+    const user = await User.findById(decoded.id).select("_id fullName email role branchId companyId");
 
     if (!user) {
       return res.status(401).json({ message: "Not authorized, user not found" });
