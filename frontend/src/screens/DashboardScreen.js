@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useState, useMemo } from "react";
+import { Pressable, StyleSheet, Text, View, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenLayout } from "../components/ScreenLayout";
@@ -29,8 +30,20 @@ const MetricCard = ({ label, value, change, icon, color }) => (
 
 export const DashboardScreen = ({ navigation }) => {
   const { loading, error, dashboard, userAuth } = useAppData();
+  const [search, setSearch] = useState("");
 
   const metrics = dashboard?.metrics;
+
+  const filteredActivity = useMemo(() => {
+    const list = dashboard?.recentActivity || [];
+    const q = search.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(item => 
+      item.trackingId?.toLowerCase().includes(q) || 
+      item.branchName?.toLowerCase().includes(q) ||
+      item.status?.toLowerCase().includes(q)
+    );
+  }, [dashboard?.recentActivity, search]);
 
   return (
     <ScreenLayout title="" loading={loading} error={error}>
@@ -58,7 +71,18 @@ export const DashboardScreen = ({ navigation }) => {
       {/* --- SEARCH BAR --- */}
       <View style={styles.searchBar}>
         <Ionicons name="search-outline" size={22} color={colors.muted} />
-        <Text style={styles.searchText}>Search tracking ID or branch...</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search tracking ID or branch..."
+          placeholderTextColor={colors.muted}
+          value={search}
+          onChangeText={setSearch}
+        />
+        {search ? (
+          <Pressable onPress={() => setSearch("")}>
+            <Ionicons name="close-circle" size={20} color={colors.muted} />
+          </Pressable>
+        ) : null}
       </View>
 
       {/* --- ALERT CARD --- */}
@@ -110,7 +134,7 @@ export const DashboardScreen = ({ navigation }) => {
         <Pressable><Text style={styles.seeAll}>See All</Text></Pressable>
       </View>
 
-      {(dashboard?.recentActivity ||[]).map((item) => (
+      {(filteredActivity).map((item) => (
         <Pressable key={item.id} style={styles.activityCard} onPress={() => navigation.navigate("DispatchDetails", { id: item.id })}>
           <View style={styles.activityLeft}>
             <View style={styles.trackBadge}>
@@ -147,7 +171,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 28,
   },
-  searchText: { color: colors.muted, fontSize: 16, marginLeft: 12 },
+  searchInput: { flex: 1, color: colors.text, fontSize: 16, marginLeft: 12, paddingVertical: 0 },
   
   alertCard: {
     backgroundColor: `${colors.danger}15`,

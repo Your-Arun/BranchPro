@@ -26,7 +26,14 @@ export const IncomingScreen = ({ navigation }) => {
       if (active !== "ALL" && d.status !== active) return false;
       const q = search.trim().toLowerCase();
       if (!q) return true;
-      return `${d.trackingId} ${d.toBranch} ${d.category}`.toLowerCase().includes(q);
+      
+      const trackingId = d.trackingId?.toLowerCase() || "";
+      const toBranch = d.toBranch?.toLowerCase() || "";
+      const category = d.category?.toLowerCase() || "";
+      
+      return trackingId.includes(q) || 
+             toBranch.includes(q) || 
+             category.includes(q);
     });
   }, [dispatches, search, active]);
 
@@ -41,6 +48,11 @@ export const IncomingScreen = ({ navigation }) => {
           placeholderTextColor={colors.muted}
           style={styles.input}
         />
+        {search ? (
+          <Pressable onPress={() => setSearch("")}>
+            <Ionicons name="close-circle" size={18} color={colors.muted} />
+          </Pressable>
+        ) : null}
       </View>
 
       <View style={styles.tabContainer}>
