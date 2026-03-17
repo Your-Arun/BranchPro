@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import logo from "./assets/logo.png";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -233,6 +234,7 @@ export default function App() {
       <div className="page center">
         {isRegistering ? (
           <form className="card login" onSubmit={onSignup}>
+            <img src={logo} className="logo" alt="BranchFlow" />
             <h1>Admin Signup</h1>
             <input placeholder="Full Name" value={signupForm.fullName} onChange={(e) => setSignupForm(s => ({ ...s, fullName: e.target.value }))} required />
             <input type="email" placeholder="Email" value={signupForm.email} onChange={(e) => setSignupForm(s => ({ ...s, email: e.target.value }))} required />
@@ -244,6 +246,7 @@ export default function App() {
           </form>
         ) : (
           <form className="card login" onSubmit={onLogin}>
+            <img src={logo} className="logo" alt="BranchFlow" />
             <h1>BranchFlow Admin</h1>
             <input type="email" placeholder="Email" value={loginForm.email} onChange={(e) => setLoginForm(s => ({ ...s, email: e.target.value }))} required />
             <input type="password" placeholder="Password" value={loginForm.password} onChange={(e) => setLoginForm(s => ({ ...s, password: e.target.value }))} required />
@@ -260,6 +263,7 @@ export default function App() {
     return (
       <div className="page center">
         <form className="card login" onSubmit={onCompanySubmit}>
+          <img src={logo} className="logo" alt="BranchFlow" />
           <h1>Welcome, {profile.fullName}</h1>
           <p>Please setup your company details to continue</p>
           <input placeholder="Company Name" value={companyForm.name} onChange={(e) => setCompanyForm(s => ({ ...s, name: e.target.value }))} required />
@@ -276,9 +280,12 @@ export default function App() {
   return (
     <div className="page">
       <header className="topbar">
-        <div>
-          <h2>{company.name} Dashboard</h2>
-          <small>Admin: {profile.fullName}</small>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <img src={logo} className="logo-small" alt="Logo" />
+          <div>
+            <h2>{company.name} Dashboard</h2>
+            <small>Admin: {profile.fullName}</small>
+          </div>
         </div>
         <button onClick={onLogout}>Logout</button>
       </header>
