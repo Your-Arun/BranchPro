@@ -18,18 +18,35 @@ export const AppDataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState("");
 
-  // 1. Initial Auth Check
+  // 1. Initial Auth & Cache Check
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem("userInfo");
+        const [storedUser, cacheComp, cacheDash, cacheDisp, cacheBran, cacheUser, cacheRepo] = await Promise.all([
+          AsyncStorage.getItem("userInfo"),
+          AsyncStorage.getItem("cache_company"),
+          AsyncStorage.getItem("cache_dashboard"),
+          AsyncStorage.getItem("cache_dispatches"),
+          AsyncStorage.getItem("cache_branches"),
+          AsyncStorage.getItem("cache_users"),
+          AsyncStorage.getItem("cache_reports")
+        ]);
+
         if (storedUser) {
           const parsed = JSON.parse(storedUser);
           setUserAuth(parsed);
           api.defaults.headers.common["Authorization"] = `Bearer ${parsed.token}`;
+          
+          // Hydrate from Cache immediately
+          if (cacheComp) setCompany(JSON.parse(cacheComp));
+          if (cacheDash) setDashboard(JSON.parse(cacheDash));
+          if (cacheDisp) setDispatches(JSON.parse(cacheDisp));
+          if (cacheBran) setBranches(JSON.parse(cacheBran));
+          if (cacheUser) setUsers(JSON.parse(cacheUser));
+          if (cacheRepo) setReports(JSON.parse(cacheRepo));
         }
       } catch (e) {
-        console.error("Auth init failed", e);
+        console.error("Auth/Cache init failed", e);
       } finally {
         setLoading(false);
       }
@@ -37,18 +54,21 @@ export const AppDataProvider = ({ children }) => {
     initAuth();
   },[]);
 
-  // 2. Fetch Data Logic
+  // 2. Fetch Data Logic (Background Refresh)
   const loadAll = useCallback(async () => {
     if (!userAuth) return;
     
     try {
-      setLoading(true);
+      // Background load: only show spinner if we have NO branches cached
+      if (branches.length === 0) setLoading(true);
       setError("");
 
       // Fetch company first
+      let freshCompany = null;
       try {
           const compRes = await api.get("/admin/company");
-          setCompany(compRes.data);
+          freshCompany = compRes.data;
+          setCompany(freshCompany);
       } catch (e) {
           if (e.response?.status === 404) setCompany(null);
           else throw e;
@@ -67,12 +87,22 @@ export const AppDataProvider = ({ children }) => {
       setBranches(branchRes.data);
       setUsers(userRes.data);
       setReports(reportRes.data);
+
+      // Save everything to Cache
+      await Promise.all([
+        AsyncStorage.setItem("cache_company", JSON.stringify(freshCompany)),
+        AsyncStorage.setItem("cache_dashboard", JSON.stringify(dashboardRes.data)),
+        AsyncStorage.setItem("cache_dispatches", JSON.stringify(dispatchRes.data)),
+        AsyncStorage.setItem("cache_branches", JSON.stringify(branchRes.data)),
+        AsyncStorage.setItem("cache_users", JSON.stringify(userRes.data)),
+        AsyncStorage.setItem("cache_reports", JSON.stringify(reportRes.data))
+      ]);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Failed to load data");
+      setError(err.response?.data?.message || err.message || "Refreshing data...");
     } finally {
       setLoading(false);
     }
-  }, [userAuth]);
+  }, [userAuth, branches.length]);
 
   useEffect(() => {
     if (userAuth) {
