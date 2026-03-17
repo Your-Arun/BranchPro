@@ -24,7 +24,7 @@ export default function App() {
     <SafeAreaProvider>
       <AppDataProvider>
         <NavigationContainer theme={navTheme}>
-          <StatusBar style="light" />
+          <StatusBar style="light" backgroundColor="transparent" translucent />
           <RootNavigator />
         </NavigationContainer>
       </AppDataProvider>

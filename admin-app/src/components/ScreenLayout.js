@@ -5,7 +5,7 @@ import { colors } from "../theme/colors";
 
 export const ScreenLayout = ({ title, right, loading, error, children }) => {
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
         <View>{right}</View>
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   title: { color: colors.text, fontSize: 34, fontWeight: "800" },
-  scroll: { padding: 18, paddingBottom: 120 },
+  scroll: { padding: 18, paddingBottom: 80 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   error: { color: colors.danger, marginBottom: 8 }
 });

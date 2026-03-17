@@ -26,9 +26,18 @@ const MainTabs = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { backgroundColor: "#08152f", borderTopColor: colors.border, height: 72, paddingBottom: 8, paddingTop: 8 },
+        tabBarHideOnKeyboard: true,
+        tabBarStyle: { 
+          backgroundColor: "#08152f", 
+          borderTopColor: colors.border,
+          borderTopWidth: 1,
+          paddingTop: 10,
+          paddingBottom: 10,
+          height: 65,
+        },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginBottom: 5 },
         tabBarIcon: ({ color, size }) => {
           const map = {
             Overview: "analytics",

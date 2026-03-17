@@ -400,8 +400,8 @@ export default function App() {
             {dispatches.map((d) => (
               <tr key={d._id}>
                 <td>{d.trackingId}</td>
-                <td>{d.fromBranch?.name}</td>
-                <td>{d.toBranch?.name}</td>
+                <td>{d.fromBranch}</td>
+                <td>{d.toBranch}</td>
                 <td>{d.status}</td>
                 <td>{new Date(d.dispatchDate).toLocaleDateString()}</td>
                 <td>

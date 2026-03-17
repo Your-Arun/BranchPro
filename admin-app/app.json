@@ -7,11 +7,22 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#07112c"
+    },
     "android": {
-      "package": "com.branchflow.admin"
+      "package": "com.branchflow.admin",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#07112c"
+      }
     },
     "ios": {
-      "bundleIdentifier": "com.branchflow.admin"
+      "bundleIdentifier": "com.branchflow.admin",
+      "supportsTablet": true
     }
   }
 }
