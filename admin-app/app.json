@@ -15,6 +15,12 @@
     },
     "android": {
       "package": "com.branchflow.admin",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#07112c"
@@ -23,6 +29,11 @@
     "ios": {
       "bundleIdentifier": "com.branchflow.admin",
       "supportsTablet": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c850dd50-0c16-4c58-bcc2-4f66109af8da"
+      }
     }
   }
 }
