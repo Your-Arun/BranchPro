@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 // YAHAN FIX KIYA: ScrollView import kiya
-import { Pressable, StyleSheet, Text, TextInput, View, ScrollView } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, ScrollView, FlatList, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenLayout } from "../components/ScreenLayout";
@@ -16,10 +16,27 @@ const tabs =[
   { label: "Received", value: "RECEIVED" }
 ];
 
+const DispatchItem = React.memo(({ item, onPress }) => (
+  <Pressable style={styles.card} onPress={() => onPress(item._id)}>
+    <View style={styles.cardTop}>
+      <View>
+        <Text style={styles.track}>BF-{item.trackingId.split("-").pop()}</Text>
+        <Text style={styles.sub}>{item.toBranch} • {item.category}</Text>
+      </View>
+      <StatusPill status={item.status} />
+    </View>
+    <View style={styles.timeRow}>
+      <Ionicons name="time-outline" size={14} color={colors.muted} />
+      <Text style={styles.timeText}>{timeAgo(item.createdAt)}</Text>
+    </View>
+  </Pressable>
+));
+
 export const IncomingScreen = ({ navigation }) => {
-  const { loading, error, dispatches } = useAppData();
+  const { loading, error, dispatches, refresh } = useAppData();
   const [search, setSearch] = useState("");
-  const[active, setActive] = useState("ALL");
+  const [active, setActive] = useState("ALL");
+  const [refreshing, setRefreshing] = useState(false);
 
   const items = useMemo(() => {
     return dispatches.filter((d) => {
@@ -31,20 +48,24 @@ export const IncomingScreen = ({ navigation }) => {
       const toBranch = d.toBranch?.toLowerCase() || "";
       const category = d.category?.toLowerCase() || "";
       
-      return trackingId.includes(q) || 
-             toBranch.includes(q) || 
-             category.includes(q);
+      return trackingId.includes(q) || toBranch.includes(q) || category.includes(q);
     });
   }, [dispatches, search, active]);
 
-  return (
-    <ScreenLayout title="Incoming Dispatches" loading={loading} error={error}>
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  };
+
+  const renderHeader = () => (
+    <View style={{ gap: 14, marginBottom: 14 }}>
       <View style={styles.searchBar}>
         <Ionicons name="search" size={20} color={colors.muted} />
         <TextInput
           value={search}
           onChangeText={setSearch}
-          placeholder="Search tracking ID, branch, or document..."
+          placeholder="Search items..."
           placeholderTextColor={colors.muted}
           style={styles.input}
         />
@@ -56,11 +77,7 @@ export const IncomingScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.tabContainer}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          contentContainerStyle={styles.tabRow}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabRow}>
           {tabs.map((t) => (
             <Pressable key={t.value} onPress={() => setActive(t.value)} style={[styles.tabBtn, active === t.value && styles.tabBtnActive]}>
               <Text style={[styles.tabText, active === t.value && styles.tabTextActive]}>{t.label}</Text>
@@ -68,22 +85,27 @@ export const IncomingScreen = ({ navigation }) => {
           ))}
         </ScrollView>
       </View>
+    </View>
+  );
 
-      {items.map((item) => (
-        <Pressable key={item._id} style={styles.card} onPress={() => navigation.navigate("DispatchDetails", { id: item._id })}>
-          <View style={styles.cardTop}>
-            <View>
-              <Text style={styles.track}>BF-{item.trackingId.split("-").pop()}</Text>
-              <Text style={styles.sub}>{item.toBranch} • {item.category}</Text>
-            </View>
-            <StatusPill status={item.status} />
-          </View>
-          <View style={styles.timeRow}>
-            <Ionicons name="time-outline" size={14} color={colors.muted} />
-            <Text style={styles.timeText}>{timeAgo(item.createdAt)}</Text>
-          </View>
-        </Pressable>
-      ))}
+  return (
+    <ScreenLayout title="Incoming" loading={loading && dispatches.length === 0} error={error}>
+      <FlatList
+        data={items}
+        renderItem={({ item }) => (
+          <DispatchItem item={item} onPress={(id) => navigation.navigate("DispatchDetails", { id })} />
+        )}
+        keyExtractor={(item) => item._id}
+        ListHeaderComponent={renderHeader}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+      />
     </ScreenLayout>
   );
 };
