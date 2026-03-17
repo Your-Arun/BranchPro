@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = "http://192.168.1.14:5000/api";
+const baseURL = "https://branchpro.onrender.com/api";
 
 export const api = axios.create({
   baseURL,
