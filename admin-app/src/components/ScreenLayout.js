@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   title: { color: colors.text, fontSize: 34, fontWeight: "800" },
-  scroll: { padding: 18, paddingBottom: 120, gap: 14 },
+  scroll: { padding: 18, paddingBottom: 120 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   error: { color: colors.danger, marginBottom: 8 }
 });

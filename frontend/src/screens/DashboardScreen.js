@@ -126,7 +126,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 16,
     flexDirection: "row",
-    gap: 12,
     alignItems: "center",
     marginBottom: 24,
     shadowColor: "#000",
@@ -143,7 +142,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 18,
     flexDirection: "row",
-    gap: 16,
     alignItems: "center",
     marginBottom: 24
   },
@@ -153,7 +151,7 @@ const styles = StyleSheet.create({
   alertBtn: { backgroundColor: colors.danger, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12 },
   alertBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
   sectionTitle: { color: colors.text, fontSize: 22, fontWeight: "700", marginBottom: 16, letterSpacing: 0.5 },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 24 },
+  grid: { flexDirection: "row", flexWrap: "wrap", marginBottom: 24,  },
   metricCard: {
     width: "48%",
     backgroundColor: colors.card,
@@ -169,7 +167,7 @@ const styles = StyleSheet.create({
   },
   metricTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   iconBubble: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-  changeBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
+  changeBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
   change: { fontSize: 12, fontWeight: "700" },
   metricBottom: { marginTop: 20 },
   metricValue: { color: colors.text, fontWeight: "800", fontSize: 36, letterSpacing: -1 },
@@ -195,7 +193,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  activityLeft: { flexDirection: "row", alignItems: "center", gap: 14, flex: 1 },
+  activityLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
   trackBadge: { width: 48, height: 48, borderRadius: 16, backgroundColor: colors.bgSoft, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border },
   trackId: { color: colors.text, fontSize: 18, fontWeight: "700" },
   trackSub: { color: colors.muted, fontSize: 14, marginTop: 4 }

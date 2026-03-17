@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+// YAHAN FIX KIYA: ScrollView import kiya
+import { Pressable, StyleSheet, Text, TextInput, View, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenLayout } from "../components/ScreenLayout";
@@ -8,7 +9,7 @@ import { colors } from "../theme/colors";
 import { timeAgo } from "../utils/helpers";
 import { useAppData } from "../utils/AppDataContext";
 
-const tabs = [
+const tabs =[
   { label: "All", value: "ALL" },
   { label: "In Transit", value: "IN_TRANSIT" },
   { label: "Waiting Receipt", value: "WAITING_RECEIPT" },
@@ -18,7 +19,7 @@ const tabs = [
 export const IncomingScreen = ({ navigation }) => {
   const { loading, error, dispatches } = useAppData();
   const [search, setSearch] = useState("");
-  const [active, setActive] = useState("ALL");
+  const[active, setActive] = useState("ALL");
 
   const items = useMemo(() => {
     return dispatches.filter((d) => {
@@ -42,12 +43,18 @@ export const IncomingScreen = ({ navigation }) => {
         />
       </View>
 
-      <View style={styles.tabRow}>
-        {tabs.map((t) => (
-          <Pressable key={t.value} onPress={() => setActive(t.value)} style={[styles.tabBtn, active === t.value && styles.tabBtnActive]}>
-            <Text style={[styles.tabText, active === t.value && styles.tabTextActive]}>{t.label}</Text>
-          </Pressable>
-        ))}
+      <View style={styles.tabContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.tabRow}
+        >
+          {tabs.map((t) => (
+            <Pressable key={t.value} onPress={() => setActive(t.value)} style={[styles.tabBtn, active === t.value && styles.tabBtnActive]}>
+              <Text style={[styles.tabText, active === t.value && styles.tabTextActive]}>{t.label}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
       </View>
 
       {items.map((item) => (
@@ -80,7 +87,16 @@ const styles = StyleSheet.create({
     gap: 10
   },
   input: { flex: 1, color: colors.text, fontSize: 17 },
-  tabRow: { flexDirection: "row", gap: 8 },
+  
+  tabContainer: {
+    marginHorizontal: -18, 
+  },
+  tabRow: { 
+    flexDirection: "row", 
+    gap: 8,
+    paddingHorizontal: 18, 
+  },
+  
   tabBtn: { backgroundColor: colors.card, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
   tabBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   tabText: { color: colors.muted, fontWeight: "600", fontSize: 14 },

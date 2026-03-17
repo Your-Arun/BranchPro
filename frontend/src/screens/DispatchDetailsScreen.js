@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   routeNode: { flex: 1 },
   routeLabel: { color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   routeName: { color: colors.text, fontSize: 22, fontWeight: "800", marginTop: 4 },
-  divider: { hieght: 1, backgroundColor: colors.border, marginVertical: 20 },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 20 },
   infoGrid: { flexDirection: "row", justifyContent: "space-between" },
   infoLabel: { color: colors.muted, fontSize: 10, fontWeight: "700", letterSpacing: 1 },
   infoVal: { color: colors.text, fontSize: 16, fontWeight: "700", marginTop: 2 },

@@ -87,7 +87,7 @@ export const DispatchDetailsScreen = ({ route, navigation }) => {
         <Text style={styles.sectionTitle}>Movement Timeline</Text>
         {(item.timeline || []).map((t, idx) => (
           <View key={idx} style={styles.timelineRow}>
-            <View style={styles.timelineLeft}>
+            <View style={[styles.timelineLeft, { marginRight: 16 }]}>
               <View style={[styles.dot, { backgroundColor: dotColor[t.status] || colors.muted }]} />
               {idx < item.timeline.length - 1 && <View style={styles.line} />}
             </View>
@@ -105,14 +105,14 @@ export const DispatchDetailsScreen = ({ route, navigation }) => {
               <ActivityIndicator color="#fff" />
             ) : (
               <>
-                <Ionicons name="checkmark-circle" size={22} color="#fff" />
+                <Ionicons name="checkmark-circle" size={22} color="#fff" style={{ marginRight: 10 }} />
                 <Text style={styles.confirmText}>Override & Receive</Text>
               </>
             )}
           </Pressable>
         ) : (
           <View style={styles.lockBadge}>
-            <Ionicons name="checkmark-done-circle" size={20} color={colors.success} />
+            <Ionicons name="checkmark-done-circle" size={20} color={colors.success} style={{ marginRight: 10 }} />
             <Text style={styles.lockText}>Shipment Finalized</Text>
           </View>
         )}
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   infoLabel: { color: colors.muted, fontSize: 10, fontWeight: "700", letterSpacing: 1 },
   infoVal: { color: colors.text, fontSize: 16, fontWeight: "700", marginTop: 2 },
   sectionTitle: { color: colors.text, fontSize: 20, fontWeight: "800", marginBottom: 16 },
-  timelineRow: { flexDirection: "row", gap: 16 },
+  timelineRow: { flexDirection: "row" },
   timelineLeft: { alignItems: "center", width: 20 },
   dot: { width: 16, height: 16, borderRadius: 8, zIndex: 2 },
   line: { width: 2, flex: 1, backgroundColor: colors.border, marginVertical: 4 },
@@ -146,8 +146,8 @@ const styles = StyleSheet.create({
   stepText: { color: colors.text, fontSize: 18, fontWeight: "700" },
   stepNote: { color: colors.muted, fontSize: 14, marginTop: 2 },
   stepDate: { color: colors.muted, fontSize: 11, marginTop: 4 },
-  confirmBtn: { backgroundColor: colors.primary, borderRadius: 20, paddingVertical: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 20 },
+  confirmBtn: { backgroundColor: colors.primary, borderRadius: 20, paddingVertical: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 20 },
   confirmText: { color: "#fff", fontSize: 18, fontWeight: "800" },
-  lockBadge: { backgroundColor: colors.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 20, borderWidth: 1, borderColor: colors.border },
+  lockBadge: { backgroundColor: colors.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 20, borderWidth: 1, borderColor: colors.border },
   lockText: { color: colors.muted, fontWeight: "600", fontSize: 14 }
 });

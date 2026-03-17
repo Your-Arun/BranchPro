@@ -19,8 +19,11 @@ export const ReportsScreen = () => {
     <ScreenLayout title="Reports" loading={loading} error={error}>
       <View style={styles.grid}>
         <Tile label="Total Dispatches" value={reports?.summary?.totalDispatches ?? 0} />
+        <View style={{ width: 10 }} />
         <Tile label="Total Received" value={reports?.summary?.totalReceived ?? 0} />
+        <View style={{ width: "100%", height: 10 }} />
         <Tile label="Pending" value={reports?.summary?.pending ?? 0} />
+        <View style={{ width: 10 }} />
         <Tile label="Overdue" value={reports?.summary?.overdue ?? 0} />
       </View>
 
@@ -64,7 +67,7 @@ export const ReportsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  grid: { flexDirection: "row", flexWrap: "wrap" },
   tile: { width: "48.5%", backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.border, padding: 14 },
   tileValue: { color: colors.text, fontSize: 34, fontWeight: "800" },
   tileLabel: { color: colors.muted, marginTop: 4 },

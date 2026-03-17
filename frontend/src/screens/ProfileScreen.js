@@ -34,7 +34,7 @@ export const ProfileScreen = () => {
         <View style={styles.infoCard}>
           <Text style={styles.sectionLabel}>ASSIGNED LOCATION</Text>
           <View style={styles.infoRow}>
-            <View style={styles.iconBox}>
+            <View style={[styles.iconBox, { marginRight: 16 }]}>
               <Ionicons name="business" size={24} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
@@ -46,7 +46,7 @@ export const ProfileScreen = () => {
           <View style={styles.divider} />
 
           <View style={styles.infoRow}>
-            <View style={styles.iconBox}>
+            <View style={[styles.iconBox, { marginRight: 16 }]}>
               <Ionicons name="location" size={24} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
@@ -60,7 +60,7 @@ export const ProfileScreen = () => {
         <View style={styles.infoCard}>
           <Text style={styles.sectionLabel}>CONTACT DETAILS</Text>
           <View style={styles.infoRow}>
-            <View style={styles.iconBox}>
+            <View style={[styles.iconBox, { marginRight: 16 }]}>
               <Ionicons name="mail" size={24} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
@@ -73,7 +73,7 @@ export const ProfileScreen = () => {
         {/* ── Support & Actions ── */}
         <View style={styles.actionsCard}>
           <Pressable style={styles.actionRow} onPress={() => Alert.alert("Support", "Please contact your Admin for account modifications.")}>
-            <Ionicons name="help-circle-outline" size={22} color={colors.text} />
+            <Ionicons name="help-circle-outline" size={22} color={colors.text} style={{ marginRight: 12 }} />
             <Text style={styles.actionText}>Help & Support</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.muted} />
           </Pressable>
@@ -81,7 +81,7 @@ export const ProfileScreen = () => {
 
         {/* ── Logout ── */}
         <Pressable style={styles.logoutBtn} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={22} color="#fff" />
+          <Ionicons name="log-out-outline" size={22} color="#fff" style={{ marginRight: 10 }} />
           <Text style={styles.logoutText}>Logout from Portal</Text>
         </Pressable>
 
@@ -102,15 +102,15 @@ const styles = StyleSheet.create({
   roleText: { color: colors.primary, fontWeight: "700", textTransform: "uppercase", fontSize: 12 },
   infoCard: { backgroundColor: colors.card, borderRadius: 28, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: colors.border },
   sectionLabel: { color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, marginBottom: 16 },
-  infoRow: { flexDirection: "row", alignItems: "center", gap: 16 },
+  infoRow: { flexDirection: "row", alignItems: "center" },
   iconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.bgSoft, alignItems: "center", justifyContent: "center" },
   infoTitle: { color: colors.muted, fontSize: 13, fontWeight: "600" },
   infoValue: { color: colors.text, fontSize: 17, fontWeight: "700", marginTop: 2 },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
   actionsCard: { backgroundColor: colors.card, borderRadius: 24, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.border },
-  actionRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 },
+  actionRow: { flexDirection: "row", alignItems: "center", paddingVertical: 4 },
   actionText: { flex: 1, color: colors.text, fontSize: 16, fontWeight: "600" },
-  logoutBtn: { backgroundColor: colors.danger, borderRadius: 20, paddingVertical: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
+  logoutBtn: { backgroundColor: colors.danger, borderRadius: 20, paddingVertical: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 20 },
   logoutText: { color: "#fff", fontSize: 18, fontWeight: "800" },
   versionText: { textAlign: "center", color: colors.muted, fontSize: 12, marginTop: 30 }
 });

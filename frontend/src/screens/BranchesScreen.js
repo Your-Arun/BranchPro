@@ -19,7 +19,7 @@ export const BranchesScreen = () => {
   return (
     <ScreenLayout title="Branches" loading={loading} error={error}>
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={20} color={colors.muted} />
+        <Ionicons name="search" size={20} color={colors.muted} style={{ marginRight: 10 }} />
         <TextInput
           style={styles.input}
           value={search}
@@ -32,7 +32,7 @@ export const BranchesScreen = () => {
       {filtered.map((b) => (
         <Pressable key={b._id} style={styles.card}>
           <View style={styles.cardRow}>
-            <View style={styles.iconBubble}>
+            <View style={[styles.iconBubble, { marginRight: 12 }]}>
               <Ionicons name="location" size={20} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
@@ -52,10 +52,10 @@ export const BranchesScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  searchBar: { backgroundColor: colors.card, borderRadius: 20, borderColor: colors.border, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10, flexDirection: "row", alignItems: "center", gap: 10 },
+  searchBar: { backgroundColor: colors.card, borderRadius: 20, borderColor: colors.border, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10, flexDirection: "row", alignItems: "center" },
   input: { flex: 1, color: colors.text, fontSize: 17 },
   card: { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 24, padding: 14 },
-  cardRow: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
+  cardRow: { flexDirection: "row", alignItems: "flex-start" },
   iconBubble: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.bgSoft, alignItems: "center", justifyContent: "center" },
   titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   name: { color: colors.text, fontWeight: "800", fontSize: 34, flex: 1 },

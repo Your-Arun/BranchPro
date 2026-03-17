@@ -130,16 +130,16 @@ export const UsersSettingsScreen = () => {
               <Text style={styles.label}>Assign Role</Text>
               <View style={styles.chipWrap}>
                 {ROLES.map((r) => (
-                  <Pressable key={r} style={[styles.chip, newUser.role === r && styles.chipActive]} onPress={() => setNewUser({ ...newUser, role: r })}>
+                  <Pressable key={r} style={[styles.chip, newUser.role === r && styles.chipActive, { marginRight: 8, marginBottom: 8 }]} onPress={() => setNewUser({ ...newUser, role: r })}>
                     <Text style={[styles.chipText, newUser.role === r && styles.chipTextActive]}>{r}</Text>
                   </Pressable>
                 ))}
               </View>
-
+...
               <Text style={styles.label}>Assign Branch</Text>
               <View style={styles.chipWrap}>
                 {branches.map((b) => (
-                  <Pressable key={b._id} style={[styles.chip, newUser.branchId === b._id && styles.chipActive]} onPress={() => setNewUser({ ...newUser, branchId: b._id })}>
+                  <Pressable key={b._id} style={[styles.chip, newUser.branchId === b._id && styles.chipActive, { marginRight: 8, marginBottom: 8 }]} onPress={() => setNewUser({ ...newUser, branchId: b._id })}>
                     <Text style={[styles.chipText, newUser.branchId === b._id && styles.chipTextActive]}>{b.name}</Text>
                   </Pressable>
                 ))}
@@ -183,7 +183,7 @@ export const UsersSettingsScreen = () => {
 
       {/* ─── SEARCH ─── */}
       <View style={styles.searchWrap}>
-        <Ionicons name="search" size={20} color={colors.muted} />
+        <Ionicons name="search" size={20} color={colors.muted} style={{ marginRight: 10 }} />
         <TextInput style={styles.searchInput} placeholder="Search staff…" placeholderTextColor={colors.muted} value={search} onChangeText={setSearch} />
       </View>
 
@@ -191,23 +191,23 @@ export const UsersSettingsScreen = () => {
 
       {filteredUsers.map((u) => (
         <View key={u._id} style={styles.userCard}>
-          <View style={styles.avatar}>
+          <View style={[styles.avatar, { marginRight: 14 }]}>
             <Text style={styles.avatarText}>{u.fullName?.[0]?.toUpperCase() || "?"}</Text>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{u.fullName}</Text>
             <Text style={styles.meta}>{u.email}</Text>
             <View style={styles.locationRow}>
-              <Ionicons name="location" size={12} color={colors.muted} />
+              <Ionicons name="location" size={12} color={colors.muted} style={{ marginRight: 4 }} />
               <Text style={styles.locationText}>{u.branchId?.name || "No branch"}</Text>
             </View>
           </View>
-          <View style={{ alignItems: "flex-end", gap: 8 }}>
-            <View style={[styles.badge, { backgroundColor: `${roleColor[u.role] || colors.primary}33` }]}>
+          <View style={{ alignItems: "flex-end" }}>
+            <View style={[styles.badge, { backgroundColor: `${roleColor[u.role] || colors.primary}33`, marginBottom: 8 }]}>
               <Text style={[styles.badgeText, { color: roleColor[u.role] || colors.primary }]}>{u.role}</Text>
             </View>
             <View style={styles.actionBtns}>
-              <Pressable style={styles.iconBtn} onPress={() => openEdit(u)}>
+              <Pressable style={[styles.iconBtn, { marginRight: 6 }]} onPress={() => openEdit(u)}>
                 <Ionicons name="pencil" size={15} color={colors.primary} />
               </Pressable>
               <Pressable style={[styles.iconBtn, styles.iconBtnDanger]} onPress={() => handleDelete(u)}>
@@ -224,19 +224,19 @@ export const UsersSettingsScreen = () => {
 
 const styles = StyleSheet.create({
   headerIcon: { padding: 4 },
-  searchWrap: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: 16, height: 52, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  searchWrap: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: 16, height: 52, flexDirection: "row", alignItems: "center", marginBottom: 8 },
   searchInput: { flex: 1, color: colors.text, fontSize: 16 },
   section: { color: colors.muted, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1, marginTop: 8, marginBottom: 12, fontSize: 12 },
-  userCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: 16, flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 12 },
+  userCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: 16, flexDirection: "row", alignItems: "center", marginBottom: 12 },
   avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.bgSoft, alignItems: "center", justifyContent: "center" },
   avatarText: { color: colors.text, fontWeight: "800", fontSize: 22 },
   name: { color: colors.text, fontWeight: "700", fontSize: 17 },
   meta: { color: colors.muted, fontSize: 13, marginTop: 3 },
-  locationRow: { flexDirection: "row", alignItems: "center", marginTop: 4, gap: 4 },
+  locationRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
   locationText: { color: colors.muted, fontSize: 12 },
   badge: { borderRadius: 10, paddingVertical: 4, paddingHorizontal: 10 },
   badgeText: { fontWeight: "800", letterSpacing: 0.5, fontSize: 11 },
-  actionBtns: { flexDirection: "row", gap: 6 },
+  actionBtns: { flexDirection: "row" },
   iconBtn: { width: 32, height: 32, borderRadius: 10, backgroundColor: `${colors.primary}15`, alignItems: "center", justifyContent: "center" },
   iconBtnDanger: { backgroundColor: `${colors.danger}15` },
   // Modal
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   modalTitle: { color: colors.text, fontSize: 24, fontWeight: "800" },
   label: { color: colors.text, fontWeight: "600", marginBottom: 8, marginTop: 16, fontSize: 15 },
   input: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 14, color: colors.text, fontSize: 16 },
-  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chipWrap: { flexDirection: "row", flexWrap: "wrap" },
   chip: { borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: colors.card },
   chipActive: { borderColor: colors.primary, backgroundColor: `${colors.primary}33` },
   chipText: { color: colors.muted, fontWeight: "600" },

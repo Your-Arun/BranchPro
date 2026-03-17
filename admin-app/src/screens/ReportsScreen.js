@@ -81,11 +81,11 @@ export const ReportsScreen = () => {
           ) : (
             branchStats.map((b) => (
               <View key={b.name} style={styles.barRow}>
-                <Text style={styles.barName}>{b.name}</Text>
+                <Text style={[styles.barName, { marginRight: 10 }]}>{b.name}</Text>
                 <View style={styles.barTrack}>
                   <View style={[styles.barFill, { width: `${Math.max(4, (b.count / maxCount) * 100)}%` }]} />
                 </View>
-                <Text style={styles.barCount}>{b.count}</Text>
+                <Text style={[styles.barCount, { marginLeft: 10 }]}>{b.count}</Text>
               </View>
             ))
           )}
@@ -128,13 +128,13 @@ const styles = StyleSheet.create({
   heroVal: { color: "#fff", fontSize: 32, fontWeight: "900" },
   heroLab: { color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "600", marginTop: 4 },
   heroDivider: { width: 1, height: 40, backgroundColor: "rgba(255,255,255,0.2)" },
-  card: { backgroundColor: colors.card, borderRadius: 24, borderWidth: 1, borderColor: colors.border, padding: 20, marginBottom: 16, gap: 4 },
+  card: { backgroundColor: colors.card, borderRadius: 24, borderWidth: 1, borderColor: colors.border, padding: 20, marginBottom: 16 },
   cardTitle: { color: colors.text, fontSize: 18, fontWeight: "700", marginBottom: 14 },
-  statRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  statRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
   statIcon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   statLabel: { flex: 1, color: colors.text, fontSize: 15, fontWeight: "600" },
   statValue: { fontSize: 20, fontWeight: "800" },
-  barRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 },
+  barRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   barName: { color: colors.text, fontSize: 13, fontWeight: "600", width: 90 },
   barTrack: { flex: 1, height: 8, backgroundColor: colors.bgSoft, borderRadius: 4 },
   barFill: { height: "100%", backgroundColor: colors.primary, borderRadius: 4 },

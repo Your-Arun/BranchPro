@@ -15,23 +15,56 @@ const seedIfEmpty = async () => {
     return;
   }
 
-  const branches = await Branch.insertMany(branchesSeed);
+  // 1. Create a placeholder admin for the company
+  const adminData = usersSeed.find(u => u.role === "ADMIN");
+  const hashedAdminPass = await bcrypt.hash(adminData.password || "123456", 10);
+  const tempAdmin = await User.create({
+    fullName: adminData.fullName,
+    email: adminData.email,
+    password: hashedAdminPass,
+    role: "ADMIN"
+  });
+
+  // 2. Create the Company with the admin
+  const { Company } = await import("./models/Company.js"); // Lazy import or make sure it's at top
+  const company = await Company.create({
+    name: "BranchFlow Pro Corp",
+    email: "system@branchflow.pro",
+    phone: "+1 (555) 012-3456",
+    adminId: tempAdmin._id
+  });
+
+  // 3. Link Admin to Company
+  tempAdmin.companyId = company._id;
+  await tempAdmin.save();
+
+  // 4. Seed Branches with Company ID
+  const branches = await Branch.insertMany(
+    branchesSeed.map(b => ({ ...b, companyId: company._id, registrationKey: `KEY-${b.code}` }))
+  );
   const branchMap = Object.fromEntries(branches.map((b) => [b.code, b]));
 
+  // 5. Update Admin's Branch
+  tempAdmin.branchId = branchMap[adminData.branchCode]._id;
+  await tempAdmin.save();
+
+  // 6. Seed other Users
+  const otherUsers = usersSeed.filter(u => u.role !== "ADMIN");
   const userDocs = [];
-  for (const u of usersSeed) {
+  for (const u of otherUsers) {
     const hashed = await bcrypt.hash(u.password || "123456", 10);
     userDocs.push({
       fullName: u.fullName,
       email: u.email,
       password: hashed,
       role: u.role,
-      branchId: branchMap[u.branchCode]._id
+      branchId: branchMap[u.branchCode]._id,
+      companyId: company._id
     });
   }
-
   await User.insertMany(userDocs);
 
+  // 7. Seed Dispatches
   await Dispatch.insertMany(
     dispatchesSeed.map((d) => ({
       trackingId: d.trackingId,
@@ -49,7 +82,7 @@ const seedIfEmpty = async () => {
     }))
   );
 
-  console.log("Seeded initial data");
+  console.log("Seeded initial data for BranchFlow Pro Corp");
 };
 
 const start = async () => {

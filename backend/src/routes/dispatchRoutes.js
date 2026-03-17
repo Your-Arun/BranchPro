@@ -5,12 +5,13 @@ import {
   listDispatches,
   updateDispatchStatus
 } from "../controllers/dispatchController.js";
+import { protect } from "../middleware/auth.js";
 
 const router = Router();
 
-router.get("/", listDispatches);
-router.get("/:id", getDispatchById);
-router.post("/", createDispatch);
-router.patch("/:id/status", updateDispatchStatus);
+router.get("/", protect, listDispatches);
+router.get("/:id", protect, getDispatchById);
+router.post("/", protect, createDispatch);
+router.patch("/:id/status", protect, updateDispatchStatus);
 
 export default router;

@@ -71,7 +71,7 @@ export const ProfileScreen = () => {
         
         {/* ── Company Card ── */}
         <View style={styles.companyCard}>
-          <View style={styles.companyIconWrap}>
+          <View style={[styles.companyIconWrap, { marginRight: 16 }]}>
             <Ionicons name="business" size={40} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
@@ -88,7 +88,7 @@ export const ProfileScreen = () => {
         <View style={styles.infoCard}>
           <Text style={styles.sectionLabel}>ACCOUNT</Text>
           <View style={styles.infoRow}>
-            <Ionicons name="person-circle" size={22} color={colors.muted} />
+            <Ionicons name="person-circle" size={22} color={colors.muted} style={{ marginRight: 12 }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.infoValue}>{userAuth?.fullName}</Text>
               <Text style={styles.infoSub}>{userAuth?.email}</Text>
@@ -104,7 +104,7 @@ export const ProfileScreen = () => {
           <Text style={styles.sectionLabel}>ACTIONS</Text>
 
           <Pressable style={styles.actionRow} onPress={openEdit}>
-            <View style={[styles.actionIcon, { backgroundColor: `${colors.primary}15` }]}>
+            <View style={[styles.actionIcon, { backgroundColor: `${colors.primary}15`, marginRight: 14 }]}>
               <Ionicons name="business-outline" size={20} color={colors.primary} />
             </View>
             <Text style={styles.actionText}>Edit Company Details</Text>
@@ -114,7 +114,7 @@ export const ProfileScreen = () => {
           <View style={styles.divider} />
 
           <Pressable style={styles.actionRow} onPress={handleDeleteCompany}>
-            <View style={[styles.actionIcon, { backgroundColor: `${colors.danger}15` }]}>
+            <View style={[styles.actionIcon, { backgroundColor: `${colors.danger}15`, marginRight: 14 }]}>
               <Ionicons name="trash-outline" size={20} color={colors.danger} />
             </View>
             <Text style={[styles.actionText, { color: colors.danger }]}>Delete Company</Text>
@@ -124,7 +124,7 @@ export const ProfileScreen = () => {
 
         {/* ── Logout ── */}
         <Pressable style={styles.logoutBtn} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={22} color="#fff" />
+          <Ionicons name="log-out-outline" size={22} color="#fff" style={{ marginRight: 10 }} />
           <Text style={styles.logoutText}>Secure Logout</Text>
         </Pressable>
 
@@ -164,7 +164,7 @@ export const ProfileScreen = () => {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   container: { padding: 20, paddingBottom: 40 },
-  companyCard: { backgroundColor: colors.card, borderRadius: 24, padding: 20, flexDirection: "row", alignItems: "center", gap: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 16 },
+  companyCard: { backgroundColor: colors.card, borderRadius: 24, padding: 20, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, marginBottom: 16 },
   companyIconWrap: { width: 64, height: 64, borderRadius: 32, backgroundColor: `${colors.primary}15`, alignItems: "center", justifyContent: "center" },
   companyName: { color: colors.text, fontSize: 20, fontWeight: "800" },
   companyEmail: { color: colors.muted, fontSize: 13, marginTop: 3 },
@@ -173,16 +173,16 @@ const styles = StyleSheet.create({
   infoCard: { backgroundColor: colors.card, borderRadius: 24, padding: 20, borderWidth: 1, borderColor: colors.border, marginBottom: 16 },
   actionsCard: { backgroundColor: colors.card, borderRadius: 24, padding: 20, borderWidth: 1, borderColor: colors.border, marginBottom: 24 },
   sectionLabel: { color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 },
-  infoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  infoRow: { flexDirection: "row", alignItems: "center" },
   infoValue: { color: colors.text, fontWeight: "700", fontSize: 16 },
   infoSub: { color: colors.muted, fontSize: 13, marginTop: 2 },
   rolePill: { backgroundColor: `${colors.primary}22`, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
   rolePillText: { color: colors.primary, fontWeight: "700", fontSize: 12 },
-  actionRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  actionRow: { flexDirection: "row", alignItems: "center" },
   actionIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   actionText: { flex: 1, color: colors.text, fontSize: 16, fontWeight: "600" },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
-  logoutBtn: { backgroundColor: colors.danger, borderRadius: 20, paddingVertical: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
+  logoutBtn: { backgroundColor: colors.danger, borderRadius: 20, paddingVertical: 16, flexDirection: "row", alignItems: "center", justifyContent: "center" },
   logoutText: { color: "#fff", fontSize: 18, fontWeight: "800" },
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 24, maxHeight: "80%" },

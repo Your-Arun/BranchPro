@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { getDashboard } from "../controllers/dashboardController.js";
+import { protect } from "../middleware/auth.js";
 
 const router = Router();
 
-router.get("/", getDashboard);
+router.get("/", protect, getDashboard);
 
 export default router;

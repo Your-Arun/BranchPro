@@ -32,7 +32,7 @@ export const IncomingScreen = ({ navigation }) => {
   return (
     <ScreenLayout title="Incoming Dispatches" loading={loading} error={error}>
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={20} color={colors.muted} />
+        <Ionicons name="search" size={20} color={colors.muted} style={{ marginRight: 10 }} />
         <TextInput
           value={search}
           onChangeText={setSearch}
@@ -44,7 +44,7 @@ export const IncomingScreen = ({ navigation }) => {
 
       <View style={styles.tabRow}>
         {tabs.map((t) => (
-          <Pressable key={t.value} onPress={() => setActive(t.value)} style={[styles.tabBtn, active === t.value && styles.tabBtnActive]}>
+          <Pressable key={t.value} onPress={() => setActive(t.value)} style={[styles.tabBtn, active === t.value && styles.tabBtnActive, { marginRight: 8 }]}>
             <Text style={[styles.tabText, active === t.value && styles.tabTextActive]}>{t.label}</Text>
           </Pressable>
         ))}
@@ -60,7 +60,7 @@ export const IncomingScreen = ({ navigation }) => {
             <StatusPill status={item.status} />
           </View>
           <View style={styles.timeRow}>
-            <Ionicons name="time-outline" size={14} color={colors.muted} />
+            <Ionicons name="time-outline" size={14} color={colors.muted} style={{ marginRight: 6 }} />
             <Text style={styles.timeText}>{timeAgo(item.createdAt)}</Text>
           </View>
         </Pressable>
@@ -76,19 +76,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: "row",
-    alignItems: "center",
-    gap: 10
+    alignItems: "center"
   },
   input: { flex: 1, color: colors.text, fontSize: 17 },
-  tabRow: { flexDirection: "row", gap: 8 },
+  tabRow: { flexDirection: "row" },
   tabBtn: { backgroundColor: colors.card, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
   tabBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   tabText: { color: colors.muted, fontWeight: "600", fontSize: 14 },
   tabTextActive: { color: colors.text },
   card: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 22, padding: 14 },
-  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   track: { color: colors.text, fontWeight: "800", fontSize: 30 },
   sub: { color: colors.muted, fontSize: 16, marginTop: 2 },
-  timeRow: { marginTop: 10, flexDirection: "row", gap: 6, alignItems: "center" },
+  timeRow: { marginTop: 10, flexDirection: "row", alignItems: "center" },
   timeText: { color: colors.muted }
 });
