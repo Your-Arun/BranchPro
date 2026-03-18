@@ -5,7 +5,7 @@ import { colors } from "../theme/colors";
 
 export const ScreenLayout = ({ title, right, loading, error, children }) => {
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right", "bottom"]}>
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
         <View>{right}</View>

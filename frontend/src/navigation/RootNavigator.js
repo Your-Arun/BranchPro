@@ -13,12 +13,15 @@ import { SignupScreen } from "../screens/SignupScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import { useAppData } from "../utils/AppDataContext";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 
 const MainTabs = () => {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -29,9 +32,9 @@ const MainTabs = () => {
           backgroundColor: "#08152f", 
           borderTopColor: colors.border,
           borderTopWidth: 1,
+          height: 65 + (insets.bottom > 0 ? insets.bottom - 10 : 0),
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
           paddingTop: 10,
-          paddingBottom: 10,
-          height: 65,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,

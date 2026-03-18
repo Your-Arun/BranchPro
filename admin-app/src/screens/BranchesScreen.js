@@ -12,6 +12,27 @@ import { api } from "../api/client";
 
 const EMPTY = { name: "", city: "", address: "", code: "", status: "ACTIVE" };
 
+import { Skeleton } from "../components/Skeleton";
+
+const BranchSkeleton = () => (
+  <View style={styles.card}>
+    <View style={styles.cardTop}>
+      <Skeleton width={44} height={44} radius={22} style={{ marginRight: 12 }} />
+      <View style={{ flex: 1 }}>
+        <Skeleton width="60%" height={20} style={{ marginBottom: 6 }} />
+        <Skeleton width="40%" height={14} />
+      </View>
+      <Skeleton width={80} height={26} radius={13} />
+    </View>
+    <Skeleton width="100%" height={40} style={{ marginBottom: 18 }} />
+    <Skeleton width="100%" height={80} radius={20} style={{ marginBottom: 16 }} />
+    <View style={{ flexDirection: "row", gap: 10 }}>
+      <Skeleton width={100} height={15} />
+      <Skeleton width={100} height={15} />
+    </View>
+  </View>
+);
+
 export const BranchesScreen = () => {
   const { loading, error, branches, refresh } = useAppData();
   const [search, setSearch] = useState("");
@@ -91,10 +112,19 @@ export const BranchesScreen = () => {
     </Pressable>
   );
 
-  return (
-    <ScreenLayout title="Logistics Hubs" loading={loading} error={error} right={headerRight}>
+  if (branches.length === 0 && loading) {
+    return (
+      <ScreenLayout title="Logistics Hubs" right={headerRight}>
+        <View style={{ gap: 16 }}>
+          <Skeleton width="100%" height={55} radius={20} style={{ marginBottom: 12 }} />
+          {[1, 2, 3].map(i => <BranchSkeleton key={i} />)}
+        </View>
+      </ScreenLayout>
+    );
+  }
 
-      {/* ─── CREATE / EDIT MODAL ─── */}
+  return (
+    <ScreenLayout title="Logistics Hubs" error={error} right={headerRight}>
       <Modal animationType="slide" transparent visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.overlay}>
           <View style={styles.sheet}>
@@ -148,7 +178,6 @@ export const BranchesScreen = () => {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* ─── SEARCH ─── */}
       <View style={styles.searchBar}>
         <Ionicons name="search" size={20} color={colors.primary} style={{ marginRight: 12 }} />
         <TextInput
@@ -165,7 +194,6 @@ export const BranchesScreen = () => {
         <Ionicons name="layers" size={14} color={colors.muted} />
       </View>
 
-      {/* ─── BRANCH CARDS ─── */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
         {filtered.map((b) => (
           <View key={b._id} style={styles.card}>

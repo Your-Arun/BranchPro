@@ -1,17 +1,25 @@
-import { StyleSheet, Text, View, ScrollView } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { ScreenLayout } from "../components/ScreenLayout";
-import { StatusPill } from "../components/StatusPill";
-import { colors } from "../theme/colors";
-import { useAppData } from "../utils/AppDataContext";
+import { Skeleton } from "../components/Skeleton";
 
-const StatRow = ({ label, value, icon, color }) => (
+const StatRow = ({ label, value, icon, color, loading }) => (
   <View style={styles.statRow}>
-    <View style={[styles.statIcon, { backgroundColor: `${color}15` }]}>
-      <Ionicons name={icon} size={20} color={color} />
+    <View style={[styles.statIcon, { backgroundColor: loading ? `${colors.border}33` : `${color}15` }]}>
+      {loading ? <Skeleton width={18} height={18} radius={9} /> : <Ionicons name={icon} size={20} color={color} />}
     </View>
-    <Text style={styles.statLabel}>{label}</Text>
-    <Text style={[styles.statValue, { color }]}>{value}</Text>
+    <View style={{ flex: 1, marginLeft: 10 }}>
+        {loading ? <Skeleton width="60%" height={16} /> : <Text style={styles.statLabel}>{label}</Text>}
+    </View>
+    {loading ? <Skeleton width={40} height={24} /> : <Text style={[styles.statValue, { color }]}>{value}</Text>}
+  </View>
+);
+
+const ReportsSkeleton = () => (
+  <View style={{ gap: 20 }}>
+    <Skeleton width="100%" height={140} radius={28} />
+    <View style={styles.card}>
+      <Skeleton width="50%" height={20} style={{ marginBottom: 20 }} />
+      {[1, 2, 3, 4, 5].map(i => <StatRow key={i} loading={true} />)}
+    </View>
+    <Skeleton width="100%" height={200} radius={24} />
   </View>
 );
 
@@ -38,8 +46,16 @@ export const ReportsScreen = () => {
 
   const maxCount = branchStats[0]?.count || 1;
 
+  if (branches.length === 0 && loading) {
+    return (
+      <ScreenLayout title="Company Reports">
+        <ReportsSkeleton />
+      </ScreenLayout>
+    );
+  }
+
   return (
-    <ScreenLayout title="Company Reports" loading={loading} error={error}>
+    <ScreenLayout title="Company Reports" error={error}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
 
         {/* ── Network Summary ── */}

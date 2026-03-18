@@ -1,21 +1,38 @@
-import { Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Skeleton } from "../components/Skeleton";
 
-import { ScreenLayout } from "../components/ScreenLayout";
-import { colors } from "../theme/colors";
-import { useAppData } from "../utils/AppDataContext";
-
-const StatBox = ({ label, value, icon, color }) => (
-  <View style={[styles.statBox, { borderTopColor: color, borderTopWidth: 3 }]}>
+const StatBox = ({ label, value, icon, color, loading }) => (
+  <View style={[styles.statBox, { borderTopColor: loading ? colors.border : color, borderTopWidth: 3 }]}>
     <View style={styles.statHeader}>
-      <View style={[styles.iconCircle, { backgroundColor: `${color}15` }]}>
-        <Ionicons name={icon} size={22} color={color} />
+      <View style={[styles.iconCircle, { backgroundColor: loading ? `${colors.border}33` : `${color}15` }]}>
+        {loading ? <Skeleton width={20} height={20} radius={10} /> : <Ionicons name={icon} size={22} color={color} />}
       </View>
     </View>
     <View style={styles.statContent}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      {loading ? (
+        <>
+          <Skeleton width="70%" height={28} style={{ marginBottom: 6 }} />
+          <Skeleton width="50%" height={13} />
+        </>
+      ) : (
+        <>
+          <Text style={styles.statValue}>{value}</Text>
+          <Text style={styles.statLabel}>{label}</Text>
+        </>
+      )}
     </View>
+  </View>
+);
+
+const DashboardSkeleton = () => (
+  <View style={{ gap: 28 }}>
+    <Skeleton width="100%" height={200} radius={32} />
+    <View>
+      <Skeleton width={150} height={20} style={{ marginBottom: 16 }} />
+      <View style={styles.statsGrid}>
+        {[1, 2, 3, 4].map(i => <StatBox key={i} loading={true} />)}
+      </View>
+    </View>
+    <Skeleton width="100%" height={150} radius={28} />
   </View>
 );
 
@@ -30,8 +47,16 @@ export const DashboardScreen = () => {
   const overdueDispatches = dispatches?.filter((d) => d.status === "OVERDUE").length || 0;
   const deliveredDispatches = dispatches?.filter((d) => d.status === "RECEIVED").length || 0;
 
+  if (!company && loading) {
+    return (
+      <ScreenLayout title="Admin Console">
+        <DashboardSkeleton />
+      </ScreenLayout>
+    );
+  }
+
   return (
-    <ScreenLayout title="Admin Console" loading={loading} error={error}>
+    <ScreenLayout title="Admin Console" error={error}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         {/* --- HERO CARD --- */}

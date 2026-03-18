@@ -7,8 +7,28 @@ import { colors } from "../theme/colors";
 import { useAppData } from "../utils/AppDataContext";
 import { api } from "../api/client";
 
+import { Skeleton } from "../components/Skeleton";
+
 const roleColor = { ADMIN: "#2265ff", STAFF: "#586888" };
 const ROLES = ["STAFF", "ADMIN"];
+
+const UserSkeleton = () => (
+  <View style={styles.userCard}>
+    <Skeleton width={50} height={50} radius={25} style={{ marginRight: 14 }} />
+    <View style={{ flex: 1 }}>
+      <Skeleton width="60%" height={18} style={{ marginBottom: 6 }} />
+      <Skeleton width="40%" height={13} style={{ marginBottom: 6 }} />
+      <Skeleton width="30%" height={12} />
+    </View>
+    <View style={{ alignItems: "flex-end", gap: 8 }}>
+      <Skeleton width={60} height={20} radius={10} />
+      <View style={{ flexDirection: "row", gap: 6 }}>
+        <Skeleton width={32} height={32} radius={10} />
+        <Skeleton width={32} height={32} radius={10} />
+      </View>
+    </View>
+  </View>
+);
 
 export const UsersSettingsScreen = () => {
   const { loading, error, users, branches, refresh, adminCreateUser } = useAppData();
@@ -101,8 +121,20 @@ export const UsersSettingsScreen = () => {
     </Pressable>
   );
 
+  if (users.length === 0 && loading) {
+    return (
+      <ScreenLayout title="Staff Management" right={headerRight}>
+        <View style={{ gap: 12 }}>
+          <Skeleton width="100%" height={52} radius={20} />
+          <Skeleton width={150} height={15} style={{ marginVertical: 10 }} />
+          {[1, 2, 3, 4, 5].map(i => <UserSkeleton key={i} />)}
+        </View>
+      </ScreenLayout>
+    );
+  }
+
   return (
-    <ScreenLayout title="Staff Management" loading={loading} error={error} right={headerRight}>
+    <ScreenLayout title="Staff Management" error={error} right={headerRight}>
 
       {/* ─── CREATE USER MODAL ─── */}
       <Modal animationType="slide" transparent visible={createVisible} onRequestClose={() => setCreateVisible(false)}>
