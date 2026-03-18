@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenLayout } from "../components/ScreenLayout";
 import { colors } from "../theme/colors";
-import { useAppData } from "../utils/AppDataContext";
+import { Skeleton } from "../components/Skeleton";
 
 const categories = ["Documents", "Parcel", "Legal", "Spare Parts", "Logistics", "Equipment"];
 
@@ -57,8 +57,27 @@ export const CreateDispatchScreen = ({ navigation }) => {
     }
   };
 
+  if (branches.length === 0 && loading) {
+    return (
+      <ScreenLayout title="New Shipment">
+        <View style={{ gap: 20 }}>
+          <Skeleton width="40%" height={15} />
+          <Skeleton width="100%" height={55} radius={16} />
+          <Skeleton width="50%" height={15} />
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <Skeleton width={80} height={35} radius={14} />
+            <Skeleton width={80} height={35} radius={14} />
+            <Skeleton width={80} height={35} radius={14} />
+          </View>
+          <Skeleton width="100%" height={1} style={{ marginVertical: 10 }} />
+          <Skeleton width="100%" height={150} radius={24} />
+        </View>
+      </ScreenLayout>
+    );
+  }
+
   return (
-    <ScreenLayout title="New Shipment" loading={loading} error={error}>
+    <ScreenLayout title="New Shipment" error={error}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         
         <Text style={styles.sectionLabel}>LOGISTICS ROUTE</Text>

@@ -9,6 +9,8 @@ import { colors } from "../theme/colors";
 import { timeAgo } from "../utils/helpers";
 import { useAppData } from "../utils/AppDataContext";
 
+import { Skeleton } from "../components/Skeleton";
+
 const tabs =[
   { label: "All", value: "ALL" },
   { label: "In Transit", value: "IN_TRANSIT" },
@@ -16,20 +18,33 @@ const tabs =[
   { label: "Received", value: "RECEIVED" }
 ];
 
-const DispatchItem = React.memo(({ item, onPress }) => (
-  <Pressable style={styles.card} onPress={() => onPress(item._id)}>
+const DispatchItem = React.memo(({ item, onPress, loading }) => (
+  <View style={styles.card}>
     <View style={styles.cardTop}>
-      <View>
-        <Text style={styles.track}>BF-{item.trackingId.split("-").pop()}</Text>
-        <Text style={styles.sub}>{item.toBranch} • {item.category}</Text>
+      <View style={{ flex: 1 }}>
+        {loading ? (
+          <>
+            <Skeleton width="60%" height={24} style={{ marginBottom: 6 }} />
+            <Skeleton width="40%" height={14} />
+          </>
+        ) : (
+          <>
+            <Text style={styles.track}>BF-{item.trackingId.split("-").pop()}</Text>
+            <Text style={styles.sub}>{item.toBranch} • {item.category}</Text>
+          </>
+        )}
       </View>
-      <StatusPill status={item.status} />
+      {loading ? (
+        <Skeleton width={80} height={24} radius={12} />
+      ) : (
+        <StatusPill status={item.status} />
+      )}
     </View>
     <View style={styles.timeRow}>
       <Ionicons name="time-outline" size={14} color={colors.muted} />
-      <Text style={styles.timeText}>{timeAgo(item.createdAt)}</Text>
+      {loading ? <Skeleton width={60} height={12} /> : <Text style={styles.timeText}>{timeAgo(item.createdAt)}</Text>}
     </View>
-  </Pressable>
+  </View>
 ));
 
 export const IncomingScreen = ({ navigation }) => {
@@ -88,12 +103,28 @@ export const IncomingScreen = ({ navigation }) => {
     </View>
   );
 
+  if (dispatches.length === 0 && loading) {
+    return (
+      <ScreenLayout title="Incoming">
+        <View style={{ gap: 16 }}>
+          <Skeleton width="100%" height={50} radius={24} />
+          <View style={{ flexDirection: "row", gap: 10, marginVertical: 8 }}>
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} width={70} height={35} radius={20} />)}
+          </View>
+          {[1, 2, 3].map(i => <DispatchItem key={i} loading={true} />)}
+        </View>
+      </ScreenLayout>
+    );
+  }
+
   return (
-    <ScreenLayout title="Incoming" loading={loading && dispatches.length === 0} error={error}>
+    <ScreenLayout title="Incoming" error={error}>
       <FlatList
         data={items}
         renderItem={({ item }) => (
-          <DispatchItem item={item} onPress={(id) => navigation.navigate("DispatchDetails", { id })} />
+          <Pressable onPress={() => navigation.navigate("DispatchDetails", { id: item._id })}>
+            <DispatchItem item={item} />
+          </Pressable>
         )}
         keyExtractor={(item) => item._id}
         ListHeaderComponent={renderHeader}

@@ -41,10 +41,15 @@ export const AppDataProvider = ({ children }) => {
           if (cacheBran) setBranches(JSON.parse(cacheBran));
           if (cacheUser) setUsers(JSON.parse(cacheUser));
           if (cacheRepo) setReports(JSON.parse(cacheRepo));
+          
+          // If we found some cache, we can stop the initial 'boot' loading
+          if (cacheDisp || cacheDash) setLoading(false);
+        } else {
+          // No user, no need to show global loading (will show Login)
+          setLoading(false);
         }
       } catch (e) {
         console.error("Auth/Cache init failed", e);
-      } finally {
         setLoading(false);
       }
     };

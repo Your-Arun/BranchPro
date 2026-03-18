@@ -24,6 +24,7 @@ const MainTabs = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarHideOnKeyboard: true,
+        lazy: false,
         tabBarStyle: { 
           backgroundColor: "#08152f", 
           borderTopColor: colors.border,

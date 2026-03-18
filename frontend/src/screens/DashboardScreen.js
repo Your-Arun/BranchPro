@@ -7,24 +7,57 @@ import { StatusPill } from "../components/StatusPill";
 import { colors } from "../theme/colors";
 import { timeAgo } from "../utils/helpers";
 import { useAppData } from "../utils/AppDataContext";
+import { Skeleton } from "../components/Skeleton";
 
-const MetricCard = ({ label, value, change, icon, color }) => (
-  <View style={[styles.metricCard, { borderBottomColor: color, borderBottomWidth: 4 }]}>
+const MetricCard = ({ label, value, change, icon, color, loading }) => (
+  <View style={[styles.metricCard, { borderBottomColor: loading ? colors.border : color, borderBottomWidth: 4 }]}>
     <View style={styles.metricTop}>
-      <View style={[styles.iconBubble, { backgroundColor: `${color}1A` }]}>
-        <Ionicons name={icon} size={22} color={color} />
+      <View style={[styles.iconBubble, { backgroundColor: loading ? `${colors.cardAlt}55` : `${color}1A` }]}>
+        {loading ? <Skeleton width={20} height={20} radius={10} /> : <Ionicons name={icon} size={22} color={color} />}
       </View>
-      <View style={[styles.changeBadge, { backgroundColor: change >= 0 ? `${colors.success}1A` : `${colors.danger}1A` }]}>
-        <Ionicons name={change >= 0 ? "trending-up" : "trending-down"} size={14} color={change >= 0 ? colors.success : colors.danger} />
-        <Text style={[styles.change, { color: change >= 0 ? colors.success : colors.danger }]}>
-          {Math.abs(change)}%
-        </Text>
-      </View>
+      {!loading && (
+        <View style={[styles.changeBadge, { backgroundColor: change >= 0 ? `${colors.success}1A` : `${colors.danger}1A` }]}>
+          <Ionicons name={change >= 0 ? "trending-up" : "trending-down"} size={14} color={change >= 0 ? colors.success : colors.danger} />
+          <Text style={[styles.change, { color: change >= 0 ? colors.success : colors.danger }]}>
+            {Math.abs(change)}%
+          </Text>
+        </View>
+      )}
     </View>
     <View style={styles.metricBottom}>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
+      {loading ? (
+        <>
+          <Skeleton width="60%" height={34} style={{ marginBottom: 6 }} />
+          <Skeleton width="40%" height={15} />
+        </>
+      ) : (
+        <>
+          <Text style={styles.metricValue}>{value}</Text>
+          <Text style={styles.metricLabel}>{label}</Text>
+        </>
+      )}
     </View>
+  </View>
+);
+
+const DashboardSkeleton = () => (
+  <View style={{ paddingTop: 10 }}>
+    <View style={styles.headerArea}>
+      <View>
+        <Skeleton width={180} height={34} style={{ marginBottom: 6 }} />
+        <Skeleton width={140} height={16} />
+      </View>
+      <Skeleton width={50} height={50} radius={25} />
+    </View>
+    <Skeleton width="100%" height={65} radius={20} style={{ marginBottom: 28 }} />
+    <Skeleton width="100%" height={80} radius={24} style={{ marginBottom: 28 }} />
+    <Text style={styles.sectionTitle}>Key Metrics</Text>
+    <View style={styles.grid}>
+      {[1, 2, 3, 4].map((i) => (
+        <MetricCard key={i} loading={true} />
+      ))}
+    </View>
+    <Skeleton width="100%" height={250} radius={28} style={{ marginTop: 28 }} />
   </View>
 );
 
@@ -45,8 +78,19 @@ export const DashboardScreen = ({ navigation }) => {
     );
   }, [dashboard?.recentActivity, search]);
 
+  // If no data and it's loading, show the full skeleton
+  if (!dashboard && loading) {
+    return (
+      <ScreenLayout title="">
+        <DashboardSkeleton />
+      </ScreenLayout>
+    );
+  }
+
   return (
-    <ScreenLayout title="" loading={loading} error={error}>
+    <ScreenLayout title="" error={error}>
+      
+      {/* Loading Overlay or Bar could be added here for background refreshes */}
       
       {/* --- HEADER AREA --- */}
       <View style={styles.headerArea}>
@@ -55,7 +99,6 @@ export const DashboardScreen = ({ navigation }) => {
           <Text style={styles.subGreeting}>{userAuth?.branch?.name || userAuth?.branchName || "Your Branch"} Overview</Text>
         </View>
         
-        {/* FIX: Redirect to ProfileScreen and show Initials */}
         <Pressable 
           style={styles.profileBtn} 
           onPress={() => navigation.navigate("Profile")}
