@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View, Modal, ScrollView, ActivityIndicator } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenLayout } from "../components/ScreenLayout";
@@ -30,16 +32,16 @@ export const UsersSettingsScreen = () => {
 
   const handleCreateUser = async () => {
     if (!newUser.fullName || !newUser.email || !newUser.password || !newUser.branchId) {
-      return Alert.alert("Error", "Please fill all required fields.");
+      return Toast.show({ type: "error", text1: "Error", text2: "Please fill all required fields." });
     }
     try {
       setIsCreating(true);
       await adminCreateUser(newUser);
       setModalVisible(false);
       setNewUser({ fullName: "", email: "", password: "", role: "STAFF", branchId: "" }); // Reset form
-      Alert.alert("Success", "New user created successfully!");
+      Toast.show({ type: "success", text1: "Success", text2: "New user created successfully!" });
     } catch (err) {
-      Alert.alert("Failed", err.response?.data?.message || "Could not create user");
+      Toast.show({ type: "error", text1: "Failed", text2: err.response?.data?.message || "Could not create user" });
     } finally {
       setIsCreating(false);
     }
