@@ -36,6 +36,11 @@
     "ios": {
       "bundleIdentifier": "com.branchflow.pro",
       "supportsTablet": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "996d0de3-8166-42bd-a5ae-b96ad5fc6dca"
+      }
     }
   }
 }
