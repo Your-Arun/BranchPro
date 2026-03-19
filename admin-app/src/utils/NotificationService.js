@@ -1,16 +1,22 @@
-import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 import Toast from "react-native-toast-message";
 
-// Set up notification handler for mobile devices
-if (Device.isDevice) {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    }),
+// Check if we're running in Expo Go
+const isExpoGo = !Device.isDevice || __DEV__;
+
+// Set up notification handler for mobile devices (only if not in Expo Go)
+if (Device.isDevice && !isExpoGo) {
+  import("expo-notifications").then(({ default: Notifications }) => {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  }).catch((error) => {
+    console.log("expo-notifications not available:", error);
   });
 }
 
@@ -21,8 +27,14 @@ export const scheduleLocalNotification = async (title, body, data = {}, seconds 
     return;
   }
 
+  if (isExpoGo) {
+    console.log("Local notifications not available in Expo Go");
+    return;
+  }
+
   try {
-    await Notifications.scheduleNotificationAsync({
+    const Notifications = await import("expo-notifications");
+    await Notifications.default.scheduleNotificationAsync({
       content: {
         title: title,
         body: body,
@@ -42,8 +54,14 @@ export const showImmediateNotification = async (title, body, data = {}) => {
     return;
   }
 
+  if (isExpoGo) {
+    console.log("Immediate notifications not available in Expo Go");
+    return;
+  }
+
   try {
-    await Notifications.scheduleNotificationAsync({
+    const Notifications = await import("expo-notifications");
+    await Notifications.default.scheduleNotificationAsync({
       content: {
         title: title,
         body: body,
@@ -61,9 +79,6 @@ export const showImmediateNotification = async (title, body, data = {}) => {
 export const registerForPushNotificationsAsync = async () => {
   let token;
 
-  // Check if we're running in Expo Go
-  const isExpoGo = !Device.isDevice || __DEV__;
-  
   if (isExpoGo) {
     console.log("Running in Expo Go - remote push notifications disabled");
     Toast.show({
@@ -78,9 +93,10 @@ export const registerForPushNotificationsAsync = async () => {
   }
 
   if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
+    const Notifications = await import("expo-notifications");
+    await Notifications.default.setNotificationChannelAsync("default", {
       name: "default",
-      importance: Notifications.AndroidImportance.HIGH,
+      importance: Notifications.default.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#FF231F7C",
       sound: "default",
@@ -88,7 +104,8 @@ export const registerForPushNotificationsAsync = async () => {
   }
 
   if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const Notifications = await import("expo-notifications");
+    const { status: existingStatus } = await Notifications.default.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== "granted") {
@@ -98,7 +115,7 @@ export const registerForPushNotificationsAsync = async () => {
         text2: "Enable notifications to receive shipment updates and alerts.",
         position: "bottom"
       });
-      const { status } = await Notifications.requestPermissionsAsync();
+      const { status } = await Notifications.default.requestPermissionsAsync();
       finalStatus = status;
     }
 
@@ -113,7 +130,8 @@ export const registerForPushNotificationsAsync = async () => {
     }
 
     try {
-      token = (await Notifications.getExpoPushTokenAsync({
+      const Notifications = await import("expo-notifications");
+      token = (await Notifications.default.getExpoPushTokenAsync({
         projectId: "f2513b70-b448-4c5b-9946-e1b532541f61",
       })).data;
       console.log("Expo Push Token:", token);
@@ -157,7 +175,11 @@ export const handleNotificationResponse = (response) => {
   }
 };
 
-// Set up notification response handler
-if (Device.isDevice) {
-  Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
+// Set up notification response handler (only if not in Expo Go)
+if (Device.isDevice && !isExpoGo) {
+  import("expo-notifications").then(({ default: Notifications }) => {
+    Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
+  }).catch((error) => {
+    console.log("expo-notifications not available:", error);
+  });
 }

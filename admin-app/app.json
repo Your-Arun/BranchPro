@@ -8,7 +8,6 @@
       "**/*"
     ],
     "plugins": [
-      "expo-notifications",
       "expo-font"
     ],
     "icon": "./assets/icon.png",
