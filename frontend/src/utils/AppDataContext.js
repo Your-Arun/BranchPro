@@ -1,7 +1,8 @@
+import * as React from "react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../api/client";
-import { registerForPushNotificationsAsync } from "./NotificationService";
+import notificationManager from "./NotificationManager";
 
 
 const AppDataContext = createContext(null);
@@ -99,7 +100,8 @@ export const AppDataProvider = ({ children }) => {
   useEffect(() => {
     if (userAuth) {
       loadAll();
-      registerForPushNotificationsAsync();
+      // Initialize notifications using the notification manager
+      notificationManager.initialize();
     }
   }, [userAuth, loadAll]);
 

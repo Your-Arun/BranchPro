@@ -1,7 +1,7 @@
 import { Skeleton } from "../components/Skeleton";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, ScrollView,} from "react-native";
 import { colors } from "../theme/colors";
 import { useAppData } from "../utils/AppDataContext";
 

@@ -1,6 +1,6 @@
+import * as React from "react";
 import { useMemo, useState } from "react";
-// YAHAN FIX KIYA: ScrollView import kiya
-import { Pressable, StyleSheet, Text, TextInput, View, ScrollView, FlatList, RefreshControl } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, FlatList, RefreshControl, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenLayout } from "../components/ScreenLayout";

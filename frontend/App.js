@@ -1,4 +1,5 @@
 import "react-native-gesture-handler";
+import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer, DarkTheme } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";

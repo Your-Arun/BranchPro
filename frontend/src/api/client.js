@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = "https://branchpro.onrender.com/api";
+const baseURL = "https://branchflow.onrender.com/api";
 
 export const api = axios.create({
   baseURL,

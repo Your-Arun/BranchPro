@@ -78,7 +78,16 @@ const MainTabs = () => {
 };
 
 export const RootNavigator = () => {
-  const { userAuth } = useAppData();
+  const { userAuth, loading } = useAppData();
+
+  // Show a loading screen while checking auth state
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

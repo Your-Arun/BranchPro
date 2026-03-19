@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import * as React from "react";import { useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View, Modal, ScrollView, ActivityIndicator } from "react-native";
 import Toast from "react-native-toast-message";
 

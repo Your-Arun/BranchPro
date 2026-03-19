@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
