@@ -1,4 +1,9 @@
 import { Skeleton } from "../components/Skeleton";
+import { ScreenLayout } from "../components/ScreenLayout";
+import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, Text, View } from "react-native";
+import { colors } from "../theme/colors";
+import { useAppData } from "../utils/AppDataContext";
 
 const StatBox = ({ label, value, icon, color, loading }) => (
   <View style={[styles.statBox, { borderTopColor: loading ? colors.border : color, borderTopWidth: 3 }]}>

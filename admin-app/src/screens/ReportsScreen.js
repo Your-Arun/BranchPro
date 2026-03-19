@@ -4,6 +4,7 @@ import { Skeleton } from "../components/Skeleton";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { StatusPill } from "../components/StatusPill";
 import { colors } from "../theme/colors";
+import { useAppData } from "../utils/AppDataContext";
 
 
 const StatRow = ({ label, value, icon, color, loading }) => (
@@ -45,14 +46,14 @@ export const ReportsScreen = () => {
   const overdue = dispatches?.filter(d => d.status === "OVERDUE").length || 0;
 
   // Branch performance: count dispatches per branch
-  const branchStats = branches.map(b => {
+  const branchStats = (branches || []).map(b => {
     const count = dispatches?.filter(d => d.fromBranch === b.name || d.toBranch === b.name).length || 0;
     return { name: b.name, count };
   }).sort((a, b) => b.count - a.count);
 
   const maxCount = branchStats[0]?.count || 1;
 
-  if (branches.length === 0 && loading) {
+  if ((branches?.length === 0 || !branches) && loading) {
     return (
       <ScreenLayout title="Company Reports">
         <ReportsSkeleton />

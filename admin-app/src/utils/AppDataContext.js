@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../api/client";
 import { registerForPushNotificationsAsync } from "./NotificationService";
+import { sendDispatchCreatedNotification, sendDispatchStatusNotification } from "./NotificationUtils";
 
 
 const AppDataContext = createContext(null);
@@ -156,14 +157,34 @@ export const AppDataProvider = ({ children }) => {
   const createDispatch = useCallback(async (payload) => {
     const { data } = await api.post("/dispatches", payload);
     setDispatches((prev) => [data, ...prev]);
+    
+    // Send notification for new dispatch
+    try {
+      await sendDispatchCreatedNotification(data);
+    } catch (error) {
+      console.log("Failed to send dispatch creation notification:", error);
+    }
+    
     return data;
   },[]);
 
   const updateStatus = useCallback(async (id, status) => {
     const { data } = await api.patch(`/dispatches/${id}/status`, { status });
     setDispatches((prev) => prev.map((d) => (d._id === id ? data : d)));
+    
+    // Send notification for status update
+    try {
+      // Find the old dispatch to get previous status
+      const oldDispatch = dispatches.find(d => d._id === id);
+      if (oldDispatch && oldDispatch.status !== status) {
+        await sendDispatchStatusNotification(data, oldDispatch.status, status);
+      }
+    } catch (error) {
+      console.log("Failed to send dispatch status notification:", error);
+    }
+    
     return data;
-  },[]);
+  },[dispatches]);
 
   const adminCreateUser = useCallback(async (userData) => {
     const { data } = await api.post("/admin/users", userData);
