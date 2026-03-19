@@ -7,6 +7,10 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "plugins": [
+      "expo-notifications",
+      "expo-font"
+    ],
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
@@ -21,10 +25,6 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ],
-      "navigationBar": {
-        "backgroundColor": "#050f2a",
-        "buttonColor": "light"
-      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#07112c"
@@ -36,7 +36,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "f2513b70-b448-4c5b-9946-e1b532541f61"
+        "projectId": "55aa37ad-f86b-411c-ae9e-586efbe16ad8"
       }
     }
   }

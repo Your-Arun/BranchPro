@@ -7,6 +7,9 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "plugins": [
+      "expo-notifications"
+    ],
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
@@ -33,11 +36,6 @@
     "ios": {
       "bundleIdentifier": "com.branchflow.pro",
       "supportsTablet": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "7aba52b7-91d7-471a-98a1-9903ebce01fe"
-      }
     }
   }
 }
