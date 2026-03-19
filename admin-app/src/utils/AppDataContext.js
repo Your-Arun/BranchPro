@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../api/client";
+import { registerForPushNotificationsAsync } from "./NotificationService";
+
 
 const AppDataContext = createContext(null);
 
@@ -106,11 +108,12 @@ export const AppDataProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [userAuth, branches.length]);
+  }, [userAuth]);
 
   useEffect(() => {
     if (userAuth) {
       loadAll();
+      registerForPushNotificationsAsync();
     }
   }, [userAuth, loadAll]);
 

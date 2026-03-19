@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View, Modal, ScrollView, ActivityIndicator } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenLayout } from "../components/ScreenLayout";
@@ -48,16 +50,16 @@ export const UsersSettingsScreen = () => {
 
   const handleCreateUser = async () => {
     if (!newUser.fullName || !newUser.email || !newUser.password || !newUser.branchId) {
-      return Alert.alert("Error", "Please fill all required fields and select a branch.");
+      return Toast.show({ type: "error", text1: "Error", text2: "Please fill all required fields and select a branch." });
     }
     try {
       setIsCreating(true);
       await adminCreateUser(newUser);
       setCreateVisible(false);
       setNewUser({ fullName: "", email: "", password: "", role: "STAFF", branchId: "" });
-      Alert.alert("Success", "New user created successfully!");
+      Toast.show({ type: "success", text1: "Success", text2: "New user created successfully!" });
     } catch (err) {
-      Alert.alert("Failed", err.response?.data?.message || "Could not create user");
+      Toast.show({ type: "error", text1: "Failed", text2: err.response?.data?.message || "Could not create user" });
     } finally {
       setIsCreating(false);
     }
@@ -70,15 +72,16 @@ export const UsersSettingsScreen = () => {
   };
 
   const handleEditSave = async () => {
-    if (!editName.trim()) return Alert.alert("Validation", "Name cannot be empty.");
+    if (!editName.trim()) return Toast.show({ type: "error", text1: "Validation", text2: "Name cannot be empty." });
+
     try {
       setIsSaving(true);
       await api.put(`/admin/users/${editTarget._id}`, { fullName: editName });
       await refresh();
       setEditVisible(false);
-      Alert.alert("Updated", "User name updated successfully!");
+      Toast.show({ type: "success", text1: "Updated", text2: "User name updated successfully!" });
     } catch (e) {
-      Alert.alert("Error", e.response?.data?.message || "Update failed");
+      Toast.show({ type: "error", text1: "Error", text2: e.response?.data?.message || "Update failed" });
     } finally {
       setIsSaving(false);
     }
@@ -95,9 +98,11 @@ export const UsersSettingsScreen = () => {
             try {
               await api.delete(`/admin/users/${u._id}`);
               await refresh();
+              Toast.show({ type: "success", text1: "Deleted", text2: "User removed." });
             } catch (e) {
-              Alert.alert("Error", e.response?.data?.message || "Delete failed");
+              Toast.show({ type: "error", text1: "Error", text2: e.response?.data?.message || "Delete failed" });
             }
+
           }
         }
       ]

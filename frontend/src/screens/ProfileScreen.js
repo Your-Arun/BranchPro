@@ -1,5 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme/colors";
@@ -72,7 +74,8 @@ export const ProfileScreen = () => {
 
         {/* ── Support & Actions ── */}
         <View style={styles.actionsCard}>
-          <Pressable style={styles.actionRow} onPress={() => Alert.alert("Support", "Please contact your Admin for account modifications.")}>
+          <Pressable style={styles.actionRow} onPress={() => Toast.show({ type: "info", text1: "Support", text2: "Contact your Admin for account modifications." })}>
+
             <Ionicons name="help-circle-outline" size={22} color={colors.text} style={{ marginRight: 12 }} />
             <Text style={styles.actionText}>Help & Support</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.muted} />

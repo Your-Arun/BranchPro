@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, TextInput, View, Pressable, ActivityIndicator, Alert, ScrollView } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme/colors";
@@ -17,7 +19,7 @@ export const SignupScreen = ({ navigation }) => {
 
   const handleSignup = async () => {
     if (!fullName || !email || !password || !registrationKey) {
-      return Alert.alert("Validation", "Required fields: Full Name, Email, Password, Branch Key.");
+      return Toast.show({ type: "error", text1: "Validation", text2: "Required fields: Full Name, Email, Password, Branch Key." });
     }
     
     setLoading(true);
@@ -35,9 +37,9 @@ export const SignupScreen = ({ navigation }) => {
         isLoggedIn: true
       });
       
-      Alert.alert("Success", "Account created successfully!");
+      Toast.show({ type: "success", text1: "Success", text2: "Account created successfully!" });
     } catch (error) {
-      Alert.alert("Signup Failed", error.response?.data?.message || "Registration error");
+      Toast.show({ type: "error", text1: "Signup Failed", text2: error.response?.data?.message || "Registration error" });
     } finally {
       setLoading(false);
     }

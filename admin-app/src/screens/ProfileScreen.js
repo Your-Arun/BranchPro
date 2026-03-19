@@ -3,6 +3,8 @@ import {
   View, Text, StyleSheet, Pressable, TextInput,
   Modal, ScrollView, ActivityIndicator, Alert
 } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme/colors";
@@ -23,16 +25,16 @@ export const ProfileScreen = () => {
 
   const handleUpdate = async () => {
     if (!form.name || !form.phone || !form.email) {
-      return Alert.alert("Validation", "All fields are required.");
+      return Toast.show({ type: "error", text1: "Validation", text2: "All fields are required." });
     }
     try {
       setSaving(true);
       await api.put("/admin/company", form);
       await refresh();
       setEditVisible(false);
-      Alert.alert("Success", "Company details updated!");
+      Toast.show({ type: "success", text1: "Success", text2: "Company details updated!" });
     } catch (e) {
-      Alert.alert("Error", e.response?.data?.message || "Update failed");
+      Toast.show({ type: "error", text1: "Error", text2: e.response?.data?.message || "Update failed" });
     } finally {
       setSaving(false);
     }
@@ -49,9 +51,11 @@ export const ProfileScreen = () => {
             try {
               await api.delete("/admin/company");
               await refresh();
+              Toast.show({ type: "success", text1: "Deleted", text2: "Company removed." });
             } catch (e) {
-              Alert.alert("Error", e.response?.data?.message || "Delete failed");
+              Toast.show({ type: "error", text1: "Error", text2: e.response?.data?.message || "Delete failed" });
             }
+
           }
         }
       ]

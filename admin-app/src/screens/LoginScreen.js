@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, TextInput, View, Pressable, ActivityIndicator, Alert } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme/colors";
@@ -12,13 +14,15 @@ export const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) return Alert.alert("Error", "Please fill all fields");
+    if (!email || !password) return Toast.show({ type: "error", text1: "Validation", text2: "Please fill all fields" });
+
     
     setLoading(true);
     try {
       await login(email, password);
+      Toast.show({ type: "success", text1: "Success", text2: "Welcome back!" });
     } catch (error) {
-      Alert.alert("Login Failed", error.response?.data?.message || "Invalid credentials");
+      Toast.show({ type: "error", text1: "Login Failed", text2: error.response?.data?.message || "Invalid credentials" });
     } finally {
       setLoading(false);
     }

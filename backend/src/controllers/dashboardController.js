@@ -26,11 +26,33 @@ export const getDashboard = async (req, res, next) => {
       Dispatch.find(scopeQuery).populate("toBranchId", "name").sort({ createdAt: -1 }).limit(5).lean()
     ]);
 
-    // Generate some slightly realistic chart data based on actual counts if they were distributed
-    const monthly = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((label, idx) => ({
-      label,
-      value: Math.floor((allCount / 4) + (idx * (allCount / 10)))
-    }));
+    // Real monthly aggregation for the last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+
+    const aggregateMonthly = await Dispatch.aggregate([
+      { $match: { ...scopeQuery, createdAt: { $gte: sixMonthsAgo } } },
+      {
+        $group: {
+          _id: { month: { $month: "$createdAt" }, year: { $year: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthly = [];
+    for (let i = 0; i < 6; i++) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (5 - i));
+        const mIdx = d.getMonth();
+        const year = d.getFullYear();
+        const label = months[mIdx];
+        const match = aggregateMonthly.find(a => a._id.month === (mIdx + 1) && a._id.year === year);
+        monthly.push({ label, value: match ? match.count : 0 });
+    }
 
     res.json({
       metrics: {

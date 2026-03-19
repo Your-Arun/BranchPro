@@ -41,11 +41,11 @@ export const DashboardScreen = () => {
 
   // Null safety & default values added
   const totalBranches = branches?.length || 0;
-  const totalStaff = users?.filter((u) => u.role === "STAFF").length || 0;
-  const activeDispatches = dispatches?.filter((d) =>["SENT", "IN_TRANSIT", "WAITING_RECEIPT"].includes(d.status)).length || 0;
-  const pendingDispatches = dispatches?.filter((d) => d.status === "PENDING").length || 0;
-  const overdueDispatches = dispatches?.filter((d) => d.status === "OVERDUE").length || 0;
-  const deliveredDispatches = dispatches?.filter((d) => d.status === "RECEIVED").length || 0;
+  const totalStaff = (users || []).filter((u) => u.role === "STAFF").length;
+  const activeDispatches = (dispatches || []).filter((d) => ["SENT", "IN_TRANSIT", "WAITING_RECEIPT"].includes(d.status)).length;
+  const pendingDispatches = (dispatches || []).filter((d) => d.status === "PENDING").length;
+  const overdueDispatches = (dispatches || []).filter((d) => d.status === "OVERDUE").length;
+  const deliveredDispatches = (dispatches || []).filter((d) => d.status === "RECEIVED").length;
 
   if (!company && loading) {
     return (
@@ -125,7 +125,7 @@ export const DashboardScreen = () => {
             You are managing <Text style={{fontWeight: "bold", color: colors.text}}>{totalBranches}</Text> active logistics hubs across the network. Check the Branches tab to generate registration keys.
           </Text>
         </View>
-        
+         
       </ScrollView>
     </ScreenLayout>
   );

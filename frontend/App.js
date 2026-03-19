@@ -6,6 +6,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { AppDataProvider } from "./src/utils/AppDataContext";
 import { colors } from "./src/theme/colors";
+import Toast from "react-native-toast-message";
+
 
 const navTheme = {
   ...DarkTheme,
@@ -27,6 +29,7 @@ export default function App() {
           <StatusBar style="light" backgroundColor="transparent" translucent />
           <RootNavigator />
         </NavigationContainer>
+        <Toast />
       </AppDataProvider>
     </SafeAreaProvider>
   );

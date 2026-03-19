@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../theme/colors";
@@ -38,10 +40,10 @@ export const DispatchDetailsScreen = ({ route, navigation }) => {
       setLoading(true);
       await updateStatus(item._id, "RECEIVED");
       await refresh();
-      Alert.alert("Success", "Shipment marked as RECEIVED and finalized.");
+      Toast.show({ type: "success", text1: "Success", text2: "Shipment marked as RECEIVED and finalized." });
       navigation.goBack();
     } catch (e) {
-      Alert.alert("Failed", e.response?.data?.message || e.message);
+      Toast.show({ type: "error", text1: "Failed", text2: e.response?.data?.message || e.message });
     } finally {
       setLoading(false);
     }

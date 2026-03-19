@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Alert, Pressable, StyleSheet, Switch, Text, TextInput, View, ScrollView, ActivityIndicator } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenLayout } from "../components/ScreenLayout";
@@ -31,7 +33,7 @@ export const CreateDispatchScreen = ({ navigation }) => {
 
   const onSubmit = async () => {
     if (!fromBranchId || !toBranchId || !courierName.trim()) {
-      Alert.alert("Validation Error", "Please select both branches and enter courier name.");
+      Toast.show({ type: "error", text1: "Validation Error", text2: "Please select both branches and enter courier name." });
       return;
     }
 
@@ -47,7 +49,8 @@ export const CreateDispatchScreen = ({ navigation }) => {
         geoTrackingEnabled
       });
       await refresh();
-      Alert.alert("Success", `Dispatch created successfully!\nTracking ID: ${created.trackingId}`);
+      Toast.show({ type: "success", text1: "Success", text2: `Dispatch created: ${created.trackingId}` });
+
       
       setCourierName("");
       setDescription("");
@@ -55,7 +58,7 @@ export const CreateDispatchScreen = ({ navigation }) => {
       
       navigation.navigate("DispatchDetails", { id: created._id });
     } catch (e) {
-      Alert.alert("Failed", e.response?.data?.message || e.message);
+      Toast.show({ type: "error", text1: "Failed", text2: e.response?.data?.message || e.message });
     } finally {
       setSaving(false);
     }

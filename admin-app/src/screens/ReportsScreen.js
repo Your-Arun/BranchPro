@@ -1,4 +1,10 @@
+import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "../components/Skeleton";
+import { ScreenLayout } from "../components/ScreenLayout";
+import { StatusPill } from "../components/StatusPill";
+import { colors } from "../theme/colors";
+
 
 const StatRow = ({ label, value, icon, color, loading }) => (
   <View style={styles.statRow}>

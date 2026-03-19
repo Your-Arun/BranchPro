@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, TextInput, View, Pressable, ActivityIndicator, Alert } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../theme/colors";
 import { useAppData } from "../utils/AppDataContext";
@@ -14,14 +16,15 @@ export const CompanySetupScreen = () => {
 
   const handleSubmit = async () => {
     if (!name || !email || !phone) {
-      return Alert.alert("Validation", "Please fill all fields.");
+      return Toast.show({ type: "error", text1: "Validation", text2: "Please fill all fields." });
     }
     
     setLoading(true);
     try {
       await setupCompany({ name, email, phone });
+      Toast.show({ type: "success", text1: "Success", text2: "Company profile created!" });
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Something went wrong");
+      Toast.show({ type: "error", text1: "Error", text2: error.response?.data?.message || "Something went wrong" });
     } finally {
       setLoading(false);
     }

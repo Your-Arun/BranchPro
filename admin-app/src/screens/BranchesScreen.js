@@ -4,6 +4,8 @@ import {
   View, Modal, ScrollView, ActivityIndicator, Share,
   KeyboardAvoidingView, Platform
 } from "react-native";
+import Toast from "react-native-toast-message";
+
 import { Ionicons } from "@expo/vector-icons";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { colors } from "../theme/colors";
@@ -61,7 +63,7 @@ export const BranchesScreen = () => {
 
   const handleSave = async () => {
     if (!form.name || !form.city || !form.address || !form.code) {
-      return Alert.alert("Validation", "All fields are required.");
+      return Toast.show({ type: "error", text1: "Validation", text2: "All fields are required." });
     }
     try {
       setSaving(true);
@@ -72,9 +74,9 @@ export const BranchesScreen = () => {
       }
       setModalVisible(false);
       await refresh();
-      Alert.alert("Success", editingId ? "Branch updated successfully!" : "New branch established!");
+      Toast.show({ type: "success", text1: "Success", text2: editingId ? "Branch updated successfully!" : "New branch established!" });
     } catch (e) {
-      Alert.alert("Error", e.response?.data?.message || "Failed to save branch");
+      Toast.show({ type: "error", text1: "Error", text2: e.response?.data?.message || "Failed to save branch" });
     } finally {
       setSaving(false);
     }
@@ -88,8 +90,9 @@ export const BranchesScreen = () => {
           try {
             await api.delete(`/admin/branches/${id}`);
             await refresh();
+            Toast.show({ type: "success", text1: "Success", text2: "Branch decommissioned." });
           } catch (e) {
-            Alert.alert("Error", e.response?.data?.message || "Operation failed");
+            Toast.show({ type: "error", text1: "Error", text2: e.response?.data?.message || "Operation failed" });
           }
         }
       }
