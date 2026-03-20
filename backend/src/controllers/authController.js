@@ -118,3 +118,26 @@ export const loginUser = async (req, res, next) => {
     next(error);
   }
 };
+export const getProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate("branchId", "name code city")
+      .populate("companyId", "name email phone");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      company: user.companyId,
+      branch: user.branchId
+    });
+  } catch (error) {
+    next(error);
+  }
+};

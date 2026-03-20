@@ -2,6 +2,7 @@
 import * as React from "react";
 import * as Device from "expo-device";
 import * as Application from "expo-application";
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 import Toast from "react-native-toast-message";
 
@@ -9,15 +10,9 @@ import Toast from "react-native-toast-message";
 const isExpoGo = Application.applicationId === "host.exp.exponent";
 
 export const registerForPushNotificationsAsync = async () => {
-  // Check if running in Expo Go on Android
-  if (Platform.OS === "android" && isExpoGo) {
-    Toast.show({
-      type: "warning",
-      text1: "Development Build Required",
-      text2: "Push notifications require a development build. Please use a development build instead of Expo Go.",
-      position: "bottom"
-    });
-    console.warn("Push notifications not available in Expo Go on Android. Use a development build.");
+  // Check if running in Expo Go (limitations in SDK 54+)
+  if (isExpoGo) {
+    console.log("Push notifications not available in Expo Go. Use a development build.");
     return null;
   }
 
@@ -71,8 +66,9 @@ export const registerForPushNotificationsAsync = async () => {
       }
 
       try {
+        const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? "996d0de3-8166-42bd-a5ae-b96ad5fc6dca";
         token = (await Notifications.getExpoPushTokenAsync({
-          projectId: "7aba52b7-91d7-471a-98a1-9903ebce01fe", // Taken from app.json
+          projectId,
         })).data;
         console.log("Expo Push Token:", token);
         
@@ -85,12 +81,15 @@ export const registerForPushNotificationsAsync = async () => {
         });
       } catch (e) {
         console.log("Failed to get push token", e);
-        Toast.show({
-          type: "error",
-          text1: "Notification Setup Failed",
-          text2: "Please try again or check your internet connection.",
-          position: "bottom"
-        });
+        // Only show error toast if NOT in Expo Go (where it's expected to fail)
+        if (!isExpoGo) {
+          Toast.show({
+            type: "error",
+            text1: "Notification Setup Failed",
+            text2: "Please try again or check your internet connection.",
+            position: "bottom"
+          });
+        }
       }
     }
 

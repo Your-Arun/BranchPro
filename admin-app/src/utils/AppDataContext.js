@@ -81,13 +81,20 @@ export const AppDataProvider = ({ children }) => {
           else throw e;
       }
 
-      const[dashboardRes, dispatchRes, branchRes, userRes, reportRes] = await Promise.all([
+      const[dashboardRes, dispatchRes, branchRes, userRes, reportRes, profileRes] = await Promise.all([
         api.get("/dashboard").catch(() => ({ data: null })),
         api.get("/admin/dispatches").catch(() => api.get("/dispatches")),
         api.get("/admin/branches").catch(() => api.get("/branches")),
         api.get("/admin/users").catch(() => api.get("/users")),
-        api.get("/reports").catch(() => ({ data: null }))
+        api.get("/reports").catch(() => ({ data: null })),
+        api.get("/auth/me").catch(() => ({ data: null }))
       ]);
+
+      if (profileRes.data) {
+          const updatedUser = { ...userAuth, ...profileRes.data };
+          setUserAuth(updatedUser);
+          await AsyncStorage.setItem("userInfo", JSON.stringify(updatedUser));
+      }
 
       setDashboard(dashboardRes.data);
       setDispatches(dispatchRes.data);

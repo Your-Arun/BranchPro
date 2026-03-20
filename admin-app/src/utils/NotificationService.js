@@ -1,6 +1,7 @@
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 import Toast from "react-native-toast-message";
+import Constants from "expo-constants";
 
 // Check if we're running in Expo Go
 const isExpoGo = !Device.isDevice || __DEV__;
@@ -130,9 +131,10 @@ export const registerForPushNotificationsAsync = async () => {
     }
 
     try {
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? "f2513b70-b448-4c5b-9946-e1b532541f61";
       const Notifications = await import("expo-notifications");
       token = (await Notifications.default.getExpoPushTokenAsync({
-        projectId: "f2513b70-b448-4c5b-9946-e1b532541f61",
+        projectId,
       })).data;
       console.log("Expo Push Token:", token);
       
@@ -144,12 +146,15 @@ export const registerForPushNotificationsAsync = async () => {
       });
     } catch (e) {
       console.log("Failed to get push token", e);
-      Toast.show({
-        type: "error",
-        text1: "Notification Error",
-        text2: "Unable to register for push notifications.",
-        position: "bottom"
-      });
+      // Suppress error in Expo Go/Dev mode as it's expected to fail
+      if (!isExpoGo) {
+        Toast.show({
+          type: "error",
+          text1: "Notification Error",
+          text2: "Unable to register for push notifications.",
+          position: "bottom"
+        });
+      }
     }
   } else {
     Toast.show({ 
