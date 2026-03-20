@@ -4,7 +4,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "../theme/colors";
 
-export const ScreenLayout = ({ title, right, loading, error, children }) => {
+export const ScreenLayout = ({ title, right, loading, error, children, scrollable = true }) => {
+  const content = (
+    <>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {children}
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right", "bottom"]}>
       <View style={styles.header}>
@@ -15,11 +22,14 @@ export const ScreenLayout = ({ title, right, loading, error, children }) => {
         <View style={styles.center}>
           <ActivityIndicator color={colors.primary} size="large" />
         </View>
-      ) : (
+      ) : scrollable ? (
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {children}
+          {content}
         </ScrollView>
+      ) : (
+        <View style={[styles.scroll, { flex: 1 }]}>
+          {content}
+        </View>
       )}
     </SafeAreaView>
   );

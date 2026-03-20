@@ -118,7 +118,7 @@ export const IncomingScreen = ({ navigation }) => {
   }
 
   return (
-    <ScreenLayout title="Incoming" error={error}>
+    <ScreenLayout title="Incoming" error={error} scrollable={false}>
       <FlatList
         data={items}
         renderItem={({ item }) => (

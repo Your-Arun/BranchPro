@@ -209,7 +209,7 @@ const NotificationSetupScreen = () => {
         </View>
       </View>
 
-      <Toast />
+      <View style={{ height: 20 }} />
     </ScrollView>
   );
 };
