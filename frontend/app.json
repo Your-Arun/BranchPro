@@ -8,7 +8,8 @@
       "**/*"
     ],
     "plugins": [
-      "expo-notifications"
+      "expo-notifications",
+      "expo-font"
     ],
     "icon": "./assets/icon.png",
     "splash": {
@@ -24,14 +25,14 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ],
-      "navigationBar": {
-        "backgroundColor": "#050f2a",
-        "buttonColor": "light"
-      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#07112c"
       }
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#050f2a",
+      "barStyle": "light-content"
     },
     "ios": {
       "bundleIdentifier": "com.branchflow.pro",
