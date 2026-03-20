@@ -63,7 +63,7 @@ const DashboardSkeleton = () => (
 );
 
 export const DashboardScreen = ({ navigation }) => {
-  const { loading, error, dashboard, userAuth } = useAppData();
+  const { loading, error, dashboard, userAuth, refresh } = useAppData();
   const [search, setSearch] = useState("");
 
   const metrics = dashboard?.metrics;
@@ -93,7 +93,7 @@ export const DashboardScreen = ({ navigation }) => {
       title="" 
       error={error}
       refreshing={loading && !!dashboard}
-      onRefresh={loadAll}
+      onRefresh={refresh}
     >
       
       {/* Loading Overlay or Bar could be added here for background refreshes */}
