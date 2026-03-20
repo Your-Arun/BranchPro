@@ -111,6 +111,11 @@ export const AppDataProvider = ({ children }) => {
     setUserAuth(data);
   };
 
+  const signup = async (payload) => {
+    const { data } = await api.post("/auth/signup", payload);
+    await setAuthState(data);
+  };
+
   const login = async (email, password) => {
     const { data } = await api.post("/auth/login", { email, password });
     if (data.role === "ADMIN") {
@@ -158,9 +163,10 @@ export const AppDataProvider = ({ children }) => {
       users,
       reports,
       refresh: loadAll,
+      signup,
       createDispatch,
       updateStatus
-    }),[userAuth, loading, error, dashboard, dispatches, branches, users, reports, loadAll, createDispatch, updateStatus]
+    }),[userAuth, loading, error, dashboard, dispatches, branches, users, reports, loadAll, signup, createDispatch, updateStatus]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

@@ -6,10 +6,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme/colors";
 import { useAppData } from "../utils/AppDataContext";
-import { api } from "../api/client";
 
 export const SignupScreen = ({ navigation }) => {
-  const { setAuthState } = useAppData();
+  const { signup } = useAppData();
   
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,22 +23,17 @@ export const SignupScreen = ({ navigation }) => {
     
     setLoading(true);
     try {
-      const { data } = await api.post("/auth/signup", { 
+      await signup({ 
         fullName, 
         email, 
         password,
-        registrationKey // This will link the user to the correct branch & company
-      });
-      
-      setAuthState({
-        token: data.token,
-        profile: data,
-        isLoggedIn: true
+        registrationKey 
       });
       
       Toast.show({ type: "success", text1: "Success", text2: "Account created successfully!" });
     } catch (error) {
-      Toast.show({ type: "error", text1: "Signup Failed", text2: error.response?.data?.message || "Registration error" });
+      console.log("Signup error detailed:", error);
+      Toast.show({ type: "error", text1: "Signup Failed", text2: error.response?.data?.message || error.message || "Registration error" });
     } finally {
       setLoading(false);
     }

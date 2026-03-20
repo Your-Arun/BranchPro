@@ -14,10 +14,12 @@ export const ScreenLayout = ({ title, right, loading, error, children, scrollabl
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right", "bottom"]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <View>{right}</View>
-      </View>
+      {(title || right) ? (
+        <View style={styles.header}>
+          <Text style={styles.title}>{title}</Text>
+          <View>{right}</View>
+        </View>
+      ) : null}
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.primary} size="large" />

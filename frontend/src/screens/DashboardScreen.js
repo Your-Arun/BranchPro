@@ -198,7 +198,7 @@ export const DashboardScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  headerArea: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20, marginTop: 5 },
+  headerArea: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10, marginTop: 5 },
   greeting: { color: colors.text, fontSize: 30, fontWeight: "800", letterSpacing: 0.5 },
   subGreeting: { color: colors.muted, fontSize: 16, marginTop: 6, fontWeight: "500" },
   profileBtn: { width: 50, height: 50, borderRadius: 25, backgroundColor: `${colors.primary}22`, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: `${colors.primary}66` },
