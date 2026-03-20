@@ -33,7 +33,10 @@ export const DispatchDetailsScreen = ({ route, navigation }) => {
   }
 
   // Staff can only confirm if they are the destination branch and it's not already received
-  const isDestination = item.toBranch === userAuth?.branch?.name;
+  const userBranchId = userAuth?.branch?._id || userAuth?.branchId;
+  const itemToBranchId = item.toBranchId;
+  
+  const isDestination = userBranchId && itemToBranchId && userBranchId.toString() === itemToBranchId.toString();
   const canConfirm = isDestination && item.status !== "RECEIVED";
 
   const onConfirm = async () => {

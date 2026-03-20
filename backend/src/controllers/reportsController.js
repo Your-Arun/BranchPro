@@ -10,12 +10,27 @@ export const getReports = async (req, res, next) => {
 
     const scopeQuery = await buildScopeQuery(req.user);
     
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
     // Aggregate data scoped to the user's company/branch
     const [totalDispatches, totalReceived, pending, overdue, companyBranches, categories] = await Promise.all([
       Dispatch.countDocuments(scopeQuery),
       Dispatch.countDocuments({ ...scopeQuery, status: "RECEIVED" }),
-      Dispatch.countDocuments({ ...scopeQuery, status: { $in: ["PENDING", "WAITING_RECEIPT"] } }),
-      Dispatch.countDocuments({ ...scopeQuery, status: "OVERDUE" }),
+      Dispatch.countDocuments({ 
+        ...scopeQuery, 
+        status: { $in: ["SENT", "IN_TRANSIT", "WAITING_RECEIPT", "PENDING"] },
+        createdAt: { $gte: yesterday } 
+      }),
+      Dispatch.countDocuments({ 
+        ...scopeQuery, 
+        $or: [
+          { status: "OVERDUE" },
+          { 
+            status: { $nin: ["RECEIVED", "PENDING", "FAILED"] },
+            createdAt: { $lt: yesterday }
+          }
+        ]
+      }),
       Branch.find({ companyId: req.user.companyId }).lean(),
       Dispatch.aggregate([
         { $match: scopeQuery },

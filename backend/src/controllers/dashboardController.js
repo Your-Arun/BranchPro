@@ -16,11 +16,26 @@ export const getDashboard = async (req, res, next) => {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
     const [allCount, receivedCount, pendingCount, overdueCount, monthCount, prevMonthCount, recent] = await Promise.all([
       Dispatch.countDocuments(scopeQuery),
       Dispatch.countDocuments({ ...scopeQuery, status: "RECEIVED" }),
-      Dispatch.countDocuments({ ...scopeQuery, status: { $in: ["PENDING", "WAITING_RECEIPT"] } }),
-      Dispatch.countDocuments({ ...scopeQuery, status: "OVERDUE" }),
+      Dispatch.countDocuments({ 
+        ...scopeQuery, 
+        status: { $in: ["SENT", "IN_TRANSIT", "WAITING_RECEIPT", "PENDING"] },
+        createdAt: { $gte: yesterday } 
+      }),
+      Dispatch.countDocuments({ 
+        ...scopeQuery, 
+        $or: [
+          { status: "OVERDUE" },
+          { 
+            status: { $nin: ["RECEIVED", "PENDING", "FAILED"] },
+            createdAt: { $lt: yesterday }
+          }
+        ]
+      }),
       Dispatch.countDocuments({ ...scopeQuery, createdAt: { $gte: monthStart } }),
       Dispatch.countDocuments({ ...scopeQuery, createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
       Dispatch.find(scopeQuery).populate("toBranchId", "name").sort({ createdAt: -1 }).limit(5).lean()

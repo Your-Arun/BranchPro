@@ -10,8 +10,11 @@ import { timeAgo } from "../utils/helpers";
 import { useAppData } from "../utils/AppDataContext";
 import { Skeleton } from "../components/Skeleton";
 
-const MetricCard = ({ label, value, change, icon, color, loading }) => (
-  <View style={[styles.metricCard, { borderBottomColor: loading ? colors.border : color, borderBottomWidth: 4 }]}>
+const MetricCard = ({ label, value, change, icon, color, loading, onPress }) => (
+  <Pressable 
+    onPress={onPress}
+    style={[styles.metricCard, { borderBottomColor: loading ? colors.border : color, borderBottomWidth: 4 }]}
+  >
     <View style={styles.metricTop}>
       <View style={[styles.iconBubble, { backgroundColor: loading ? `${colors.cardAlt}55` : `${color}1A` }]}>
         {loading ? <Skeleton width={20} height={20} radius={10} /> : <Ionicons name={icon} size={22} color={color} />}
@@ -38,7 +41,7 @@ const MetricCard = ({ label, value, change, icon, color, loading }) => (
         </>
       )}
     </View>
-  </View>
+  </Pressable>
 );
 
 const DashboardSkeleton = () => (
@@ -144,7 +147,10 @@ export const DashboardScreen = ({ navigation }) => {
             <Text style={styles.alertTitle}>{dashboard.alert.count} Overdue Shipments</Text>
             <Text style={styles.alertSub}>{dashboard.alert.message}</Text>
           </View>
-          <Pressable style={styles.alertBtn}>
+          <Pressable 
+            style={styles.alertBtn}
+            onPress={() => navigation.navigate("Incoming", { status: "OVERDUE" })}
+          >
             <Text style={styles.alertBtnText}>View</Text>
           </Pressable>
         </View>
@@ -153,10 +159,38 @@ export const DashboardScreen = ({ navigation }) => {
       {/* --- KEY METRICS --- */}
       <Text style={styles.sectionTitle}>Key Metrics</Text>
       <View style={styles.grid}>
-        <MetricCard label="Total Sent" value={metrics?.totalSent?.value ?? 0} change={metrics?.totalSent?.change ?? 0} icon="paper-plane" color={colors.primary} />
-        <MetricCard label="Received" value={metrics?.received?.value ?? 0} change={metrics?.received?.change ?? 0} icon="download" color={colors.success} />
-        <MetricCard label="Pending" value={metrics?.pending?.value ?? 0} change={metrics?.pending?.change ?? 0} icon="time" color={colors.warning} />
-        <MetricCard label="Overdue" value={metrics?.overdue?.value ?? 0} change={metrics?.overdue?.change ?? 0} icon="alert-circle" color={colors.danger} />
+        <MetricCard 
+          label="Total Sent" 
+          value={metrics?.totalSent?.value ?? 0} 
+          change={metrics?.totalSent?.change ?? 0} 
+          icon="paper-plane" 
+          color={colors.primary} 
+          onPress={() => navigation.navigate("Incoming", { status: "ALL" })}
+        />
+        <MetricCard 
+          label="Received" 
+          value={metrics?.received?.value ?? 0} 
+          change={metrics?.received?.change ?? 0} 
+          icon="download" 
+          color={colors.success} 
+          onPress={() => navigation.navigate("Incoming", { status: "RECEIVED" })}
+        />
+        <MetricCard 
+          label="Pending" 
+          value={metrics?.pending?.value ?? 0} 
+          change={metrics?.pending?.change ?? 0} 
+          icon="time" 
+          color={colors.warning} 
+          onPress={() => navigation.navigate("Incoming", { status: "TRANSIT" })}
+        />
+        <MetricCard 
+          label="Overdue" 
+          value={metrics?.overdue?.value ?? 0} 
+          change={metrics?.overdue?.change ?? 0} 
+          icon="alert-circle" 
+          color={colors.danger} 
+          onPress={() => navigation.navigate("Incoming", { status: "OVERDUE" })}
+        />
       </View>
 
       {/* --- CHART AREA --- */}
@@ -180,7 +214,9 @@ export const DashboardScreen = ({ navigation }) => {
       {/* --- RECENT ACTIVITY --- */}
       <View style={styles.sectionHead}>
         <Text style={styles.sectionTitle}>Recent Transits</Text>
-        <Pressable><Text style={styles.seeAll}>See All</Text></Pressable>
+        <Pressable onPress={() => navigation.navigate("Incoming", { status: "ALL" })}>
+          <Text style={styles.seeAll}>See All</Text>
+        </Pressable>
       </View>
 
       {(filteredActivity).map((item) => (

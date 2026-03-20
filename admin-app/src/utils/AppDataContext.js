@@ -92,8 +92,11 @@ export const AppDataProvider = ({ children }) => {
 
       if (profileRes.data) {
           const updatedUser = { ...userAuth, ...profileRes.data };
-          setUserAuth(updatedUser);
-          await AsyncStorage.setItem("userInfo", JSON.stringify(updatedUser));
+          // Only update if there's a real change to avoid re-render loops
+          if (JSON.stringify(updatedUser) !== JSON.stringify(userAuth)) {
+              setUserAuth(updatedUser);
+              await AsyncStorage.setItem("userInfo", JSON.stringify(updatedUser));
+          }
       }
 
       setDashboard(dashboardRes.data);
@@ -185,6 +188,7 @@ export const AppDataProvider = ({ children }) => {
   const updateDispatch = useCallback(async (id, payload) => {
     const { data } = await api.patch(`/dispatches/${id}`, payload);
     setDispatches((prev) => prev.map((d) => (d._id === id ? data : d)));
+    await loadAll();
     return data;
   },[]);
 

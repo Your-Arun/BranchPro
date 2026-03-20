@@ -11,22 +11,37 @@ const statusMap = {
   SENT: "SENT"
 };
 
-const toDto = (dispatch) => ({
-  _id: dispatch._id,
-  trackingId: dispatch.trackingId,
-  fromBranch: dispatch.fromBranchId?.name ?? "External/Unknown",
-  toBranch: dispatch.toBranchId?.name ?? "External/Unknown",
-  category: dispatch.category,
-  courierName: dispatch.courierName,
-  description: dispatch.description,
-  dispatchDate: dispatch.dispatchDate,
-  status: dispatch.status,
-  priority: dispatch.priority,
-  geoTrackingEnabled: dispatch.geoTrackingEnabled,
-  attachments: dispatch.attachments,
-  timeline: dispatch.timeline,
-  createdAt: dispatch.createdAt
-});
+const toDto = (dispatch) => {
+  let status = dispatch.status;
+  
+  // Dynamic Overdue calculation: If not received and older than 24 hours
+  if (status !== "RECEIVED" && status !== "PENDING" && status !== "FAILED") {
+    const createdAt = dispatch.createdAt instanceof Date ? dispatch.createdAt : new Date(dispatch.createdAt);
+    const hrsOld = (new Date() - createdAt) / (1000 * 60 * 60);
+    if (hrsOld > 24) {
+      status = "OVERDUE";
+    }
+  }
+
+  return {
+    _id: dispatch._id,
+    trackingId: dispatch.trackingId,
+    fromBranch: dispatch.fromBranchId?.name ?? "External/Unknown",
+    toBranch: dispatch.toBranchId?.name ?? "External/Unknown",
+    fromBranchId: dispatch.fromBranchId?._id || dispatch.fromBranchId,
+    toBranchId: dispatch.toBranchId?._id || dispatch.toBranchId,
+    category: dispatch.category,
+    courierName: dispatch.courierName,
+    description: dispatch.description,
+    dispatchDate: dispatch.dispatchDate,
+    status: status,
+    priority: dispatch.priority,
+    geoTrackingEnabled: dispatch.geoTrackingEnabled,
+    attachments: dispatch.attachments,
+    timeline: dispatch.timeline,
+    createdAt: dispatch.createdAt
+  };
+};
 
 // Build query scoped to a user's branch (STAFF) or company branches (ADMIN)
 export const buildScopeQuery = async (user) => {
@@ -171,9 +186,27 @@ export const updateDispatchStatus = async (req, res, next) => {
     }
 
     const scopeQuery = await buildScopeQuery(req.user);
+    const update = { status };
+
+    if (status === "RECEIVED") {
+      update.$push = {
+        timeline: {
+          step: "Received",
+          note: "Shipment successfully received and verified at destination.",
+          status: "COMPLETED",
+          date: new Date()
+        }
+      };
+      // Mark previous steps as COMPLETED if they were not
+      await Dispatch.updateOne(
+        { _id: req.params.id, ...scopeQuery, "timeline.status": "IN_PROGRESS" },
+        { $set: { "timeline.$.status": "COMPLETED", "timeline.$.date": new Date() } }
+      );
+    }
+
     const updated = await Dispatch.findOneAndUpdate(
       { _id: req.params.id, ...scopeQuery }, 
-      { status }, 
+      update, 
       { new: true }
     )
       .populate("fromBranchId", "name")
