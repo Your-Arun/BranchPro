@@ -42,7 +42,7 @@ const DashboardSkeleton = () => (
 );
 
 export const DashboardScreen = () => {
-  const { loading, error, company, branches, users, dispatches } = useAppData();
+  const { loading, error, company, branches, users, dispatches, refresh } = useAppData();
 
   // Null safety & default values added
   const totalBranches = branches?.length || 0;
@@ -61,7 +61,12 @@ export const DashboardScreen = () => {
   }
 
   return (
-    <ScreenLayout title="Admin Console" error={error}>
+    <ScreenLayout 
+      title="Admin Console" 
+      error={error}
+      refreshing={loading && !!company}
+      onRefresh={refresh}
+    >
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         {/* --- HERO CARD --- */}

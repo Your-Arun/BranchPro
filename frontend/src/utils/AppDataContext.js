@@ -100,8 +100,15 @@ export const AppDataProvider = ({ children }) => {
   useEffect(() => {
     if (userAuth) {
       loadAll();
-      // Initialize notifications using the notification manager
+      // Initialize notifications
       notificationManager.initialize();
+
+      // Background polling every 30 seconds
+      const poll = setInterval(() => {
+        loadAll();
+      }, 30000);
+
+      return () => clearInterval(poll);
     }
   }, [userAuth, loadAll]);
 

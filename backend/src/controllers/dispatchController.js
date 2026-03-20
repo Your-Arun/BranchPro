@@ -190,6 +190,51 @@ export const updateDispatchStatus = async (req, res, next) => {
   }
 };
 
+export const updateDispatch = async (req, res, next) => {
+  try {
+    const { 
+      category, 
+      courierName, 
+      description, 
+      dispatchDate, 
+      geoTrackingEnabled, 
+      toBranchId,
+      status 
+    } = req.body;
+
+    if (req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Editing dispatch details is restricted to administrators" });
+    }
+
+    const scopeQuery = await buildScopeQuery(req.user);
+    const updateData = {};
+    if (category) updateData.category = category;
+    if (courierName) updateData.courierName = courierName;
+    if (description !== undefined) updateData.description = description;
+    if (dispatchDate) updateData.dispatchDate = dispatchDate;
+    if (geoTrackingEnabled !== undefined) updateData.geoTrackingEnabled = geoTrackingEnabled;
+    if (toBranchId) updateData.toBranchId = toBranchId;
+    if (status) updateData.status = status;
+
+    const updated = await Dispatch.findOneAndUpdate(
+      { _id: req.params.id, ...scopeQuery },
+      { $set: updateData },
+      { new: true }
+    )
+      .populate("fromBranchId", "name")
+      .populate("toBranchId", "name")
+      .lean();
+
+    if (!updated) {
+      return res.status(404).json({ message: "Dispatch record not found or unauthorized" });
+    }
+
+    res.json(toDto(updated));
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteDispatch = async (req, res, next) => {
   try {
     if (req.user.role !== "ADMIN") {

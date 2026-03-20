@@ -1,25 +1,50 @@
-import React from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import * as React from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "../theme/colors";
 
-export const ScreenLayout = ({ title, right, loading, error, children }) => {
+export const ScreenLayout = ({ title, right, loading, error, children, scrollable = true, refreshing = false, onRefresh }) => {
+  const content = (
+    <>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {children}
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right", "bottom"]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <View>{right}</View>
-      </View>
+      {(title || right) ? (
+        <View style={styles.header}>
+          <Text style={styles.title}>{title}</Text>
+          <View>{right}</View>
+        </View>
+      ) : null}
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.primary} size="large" />
         </View>
-      ) : (
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {children}
+      ) : scrollable ? (
+        <ScrollView 
+          contentContainerStyle={styles.scroll} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh} 
+                colors={[colors.primary]} 
+                tintColor={colors.primary}
+              />
+            ) : null
+          }
+        >
+          {content}
         </ScrollView>
+      ) : (
+        <View style={[styles.scroll, { flex: 1 }]}>
+          {content}
+        </View>
       )}
     </SafeAreaView>
   );
@@ -37,7 +62,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   title: { color: colors.text, fontSize: 34, fontWeight: "800" },
-  scroll: { padding: 18, paddingBottom: 80 },
+  scroll: { padding: 18, paddingBottom: 80, gap: 14 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   error: { color: colors.danger, marginBottom: 8 }
 });

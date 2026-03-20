@@ -89,7 +89,12 @@ export const DashboardScreen = ({ navigation }) => {
   }
 
   return (
-    <ScreenLayout title="" error={error}>
+    <ScreenLayout 
+      title="" 
+      error={error}
+      refreshing={loading && !!dashboard}
+      onRefresh={loadAll}
+    >
       
       {/* Loading Overlay or Bar could be added here for background refreshes */}
       

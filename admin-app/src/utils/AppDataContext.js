@@ -115,6 +115,13 @@ export const AppDataProvider = ({ children }) => {
     if (userAuth) {
       loadAll();
       registerForPushNotificationsAsync();
+
+      // Background polling every 30 seconds
+      const poll = setInterval(() => {
+        loadAll();
+      }, 30000);
+
+      return () => clearInterval(poll);
     }
   }, [userAuth, loadAll]);
 
@@ -168,6 +175,17 @@ export const AppDataProvider = ({ children }) => {
     return data;
   },[]);
 
+  const updateDispatch = useCallback(async (id, payload) => {
+    const { data } = await api.patch(`/dispatches/${id}`, payload);
+    setDispatches((prev) => prev.map((d) => (d._id === id ? data : d)));
+    return data;
+  },[]);
+
+  const deleteDispatch = useCallback(async (id) => {
+    await api.delete(`/dispatches/${id}`);
+    setDispatches((prev) => prev.filter((d) => d._id !== id));
+  },[]);
+
   const updateStatus = useCallback(async (id, status) => {
     const { data } = await api.patch(`/dispatches/${id}/status`, { status });
     setDispatches((prev) => prev.map((d) => (d._id === id ? data : d)));
@@ -210,6 +228,8 @@ export const AppDataProvider = ({ children }) => {
       refresh: loadAll,
       createDispatch,
       updateStatus,
+      updateDispatch,
+      deleteDispatch,
       adminCreateUser
     }),[userAuth, company, loading, error, dashboard, dispatches, branches, users, reports, loadAll, createDispatch, updateStatus]
   );

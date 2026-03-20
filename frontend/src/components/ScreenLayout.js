@@ -1,10 +1,10 @@
 import * as React from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "../theme/colors";
 
-export const ScreenLayout = ({ title, right, loading, error, children, scrollable = true }) => {
+export const ScreenLayout = ({ title, right, loading, error, children, scrollable = true, refreshing = false, onRefresh }) => {
   const content = (
     <>
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -25,7 +25,20 @@ export const ScreenLayout = ({ title, right, loading, error, children, scrollabl
           <ActivityIndicator color={colors.primary} size="large" />
         </View>
       ) : scrollable ? (
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={styles.scroll} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh} 
+                colors={[colors.primary]} 
+                tintColor={colors.primary}
+              />
+            ) : null
+          }
+        >
           {content}
         </ScrollView>
       ) : (
