@@ -21,7 +21,7 @@ const dispatchSchema = new mongoose.Schema(
     geoTrackingEnabled: { type: Boolean, default: true },
     status: {
       type: String,
-      enum: ["SENT", "IN_TRANSIT", "WAITING_RECEIPT", "RECEIVED", "PENDING", "OVERDUE"],
+      enum: ["SENT", "IN_TRANSIT", "WAITING_RECEIPT", "RECEIVED", "PENDING", "OVERDUE", "FAILED"],
       default: "SENT"
     },
     priority: { type: String, enum: ["LOW", "MEDIUM", "HIGH"], default: "MEDIUM" },

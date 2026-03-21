@@ -1,3 +1,4 @@
+import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 import Toast from "react-native-toast-message";
@@ -13,9 +14,6 @@ export const scheduleLocalNotification = async (title, body, data = {}) => {
       console.log("Local notifications not available on this device");
       return false;
     }
-
-    // Dynamic import to avoid Expo Go startup errors
-    const Notifications = await import("expo-notifications");
 
     // Request permissions for local notifications
     const { status } = await Notifications.requestPermissionsAsync();

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "../api/client";
 import notificationManager from "./NotificationManager";
@@ -17,6 +18,7 @@ export const AppDataProvider = ({ children }) => {
   
   // Auth & UI States
   const [userAuth, setUserAuth] = useState(null);
+  const lastDispatchesRef = React.useRef([]);
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState("");
 
@@ -59,13 +61,17 @@ export const AppDataProvider = ({ children }) => {
     initAuth();
   },[]);
 
+  // Use a ref for userAuth to keep loadAll stable and avoid re-render loops
+  const authRef = React.useRef(userAuth);
+  React.useEffect(() => {
+    authRef.current = userAuth;
+  }, [userAuth]);
+
   // 2. Fetch Data Logic (Background Refresh)
   const loadAll = useCallback(async () => {
-    if (!userAuth) return;
+    if (!authRef.current) return;
     
     try {
-      // Only set loading if we don't have cached dispatches (initial boot)
-      if (dispatches.length === 0) setLoading(true);
       setError("");
 
       const[dashboardRes, dispatchRes, branchRes, userRes, reportRes, profileRes] = await Promise.all([
@@ -78,13 +84,37 @@ export const AppDataProvider = ({ children }) => {
       ]);
 
       if (profileRes.data) {
-          const updatedUser = { ...userAuth, ...profileRes.data };
+          const updatedUser = { ...authRef.current, ...profileRes.data };
           // Only update if there's a real change to avoid re-render loops
-          if (JSON.stringify(updatedUser) !== JSON.stringify(userAuth)) {
+          if (JSON.stringify(updatedUser) !== JSON.stringify(authRef.current)) {
               setUserAuth(updatedUser);
               await AsyncStorage.setItem("userInfo", JSON.stringify(updatedUser));
           }
       }
+
+      // Detect NEW incoming dispatches for notifications
+      if (lastDispatchesRef.current.length > 0 && authRef.current?.branch?._id) {
+          const freshItems = dispatchRes.data.filter(d => 
+              !lastDispatchesRef.current.some(old => old._id === d._id)
+          );
+
+          if (freshItems.length > 0) {
+              const myBranchId = authRef.current.branch._id.toString();
+              const incomingCount = freshItems.filter(item => {
+                  const targetBranchId = (item.toBranchId?._id || item.toBranchId)?.toString();
+                  return targetBranchId === myBranchId && (item.status === "SENT" || item.status === "IN_TRANSIT");
+              }).length;
+
+              if (incomingCount > 0) {
+                  notificationManager.sendNotification(
+                      "New Incoming Shipment",
+                      `You have ${incomingCount} new shipment(s) arriving at your hub!`,
+                      { type: 'INCOMING' }
+                  );
+              }
+          }
+      }
+      lastDispatchesRef.current = dispatchRes.data;
 
       setDashboard(dashboardRes.data);
       setDispatches(dispatchRes.data);
@@ -105,7 +135,7 @@ export const AppDataProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [userAuth]);
+  }, []); // Empty dependency array ensures loadAll never changes, stopping infinite refresh loops
 
   useEffect(() => {
     if (userAuth) {
@@ -113,14 +143,24 @@ export const AppDataProvider = ({ children }) => {
       // Initialize notifications
       notificationManager.initialize();
 
-      // Background polling every 30 seconds
+      // Background polling every 20 seconds
       const poll = setInterval(() => {
         loadAll();
-      }, 30000);
+      }, 20000);
 
-      return () => clearInterval(poll);
+      // Refresh on App foreground
+      const subscription = AppState.addEventListener("change", (nextState) => {
+        if (nextState === "active") {
+          loadAll();
+        }
+      });
+
+      return () => {
+        clearInterval(poll);
+        subscription.remove();
+      };
     }
-  }, [userAuth, loadAll]);
+  }, [!!userAuth, loadAll]);
 
   const setAuthState = async (data) => {
     api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;

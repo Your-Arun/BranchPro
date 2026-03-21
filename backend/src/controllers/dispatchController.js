@@ -14,14 +14,42 @@ const statusMap = {
 const toDto = (dispatch) => {
   let status = dispatch.status;
   
-  // Dynamic Overdue calculation: If not received and older than 24 hours
-  if (status !== "RECEIVED" && status !== "PENDING" && status !== "FAILED") {
-    const createdAt = dispatch.createdAt instanceof Date ? dispatch.createdAt : new Date(dispatch.createdAt);
-    const hrsOld = (new Date() - createdAt) / (1000 * 60 * 60);
-    if (hrsOld > 24) {
+  const createdAt = dispatch.createdAt instanceof Date ? dispatch.createdAt : new Date(dispatch.createdAt);
+  const hrsOld = (new Date() - createdAt) / (1000 * 60 * 60);
+  const daysOld = hrsOld / 24;
+
+  // Dynamic status for active shipments
+  if (status !== "RECEIVED" && status !== "FAILED") {
+    if (daysOld >= 3) {
       status = "OVERDUE";
+    } else if (daysOld >= 1) {
+      if (status === "SENT" || status === "IN_TRANSITION" || status === "WAITING_RECEIPT") {
+        status = "PENDING";
+      }
     }
   }
+
+  // Update timeline steps based on top-level status
+  const timeline = (dispatch.timeline || []).map(step => {
+    let stepStatus = step.status || "PENDING";
+    let stepNote = step.note;
+
+    if (stepStatus !== "COMPLETED") {
+       if (status === "OVERDUE") {
+         stepStatus = "OVERDUE";
+         if (!stepNote.includes("(OVERDUE)")) stepNote = stepNote + " (OVERDUE)";
+       } else if (status === "PENDING") {
+         stepStatus = "PENDING";
+         if (!stepNote.includes("(DELAYED)")) stepNote = stepNote + " (DELAYED)";
+       }
+    }
+
+    return {
+      ...step.toObject ? step.toObject() : step,
+      status: stepStatus,
+      note: stepNote
+    };
+  });
 
   return {
     _id: dispatch._id,
@@ -38,9 +66,63 @@ const toDto = (dispatch) => {
     priority: dispatch.priority,
     geoTrackingEnabled: dispatch.geoTrackingEnabled,
     attachments: dispatch.attachments,
-    timeline: dispatch.timeline,
+    timeline: timeline,
     createdAt: dispatch.createdAt
   };
+};
+
+const syncTimelineWithStatus = (doc, newStatus, user) => {
+  doc.status = newStatus;
+  
+  if (newStatus === "RECEIVED") {
+    // 1. Ensure all existing steps are COMPLETED using a fresh array for Mongoose safety
+    const updatedTimeline = doc.timeline.map((item) => {
+      const plainItem = item.toObject ? item.toObject() : item;
+      if (plainItem.status !== "COMPLETED") {
+        plainItem.status = "COMPLETED";
+        if (!plainItem.date) plainItem.date = new Date();
+      }
+      return plainItem;
+    });
+
+    // 2. Add Delivered step
+    const hasDelivered = updatedTimeline.some(t => t.step === "Delivered");
+    if (!hasDelivered) {
+      updatedTimeline.push({
+        step: "Delivered",
+        note: `Shipment successfully delivered and verified by ${user?.fullName || "Staff"} at destination.`,
+        status: "COMPLETED",
+        date: new Date()
+      });
+    }
+
+    doc.timeline = updatedTimeline;
+    doc.markModified("timeline");
+  } else if (newStatus === "FAILED") {
+    // 1. Mark existing open steps as failed/overdue
+    const updatedTimeline = doc.timeline.map((item) => {
+      const plainItem = item.toObject ? item.toObject() : item;
+      if (plainItem.status !== "COMPLETED") {
+        plainItem.status = "PENDING"; 
+        if (!plainItem.date) plainItem.date = new Date();
+      }
+      return plainItem;
+    });
+
+    // 2. Add Withdrawn step
+    const hasFailed = updatedTimeline.some(t => t.step === "Withdrawn");
+    if (!hasFailed) {
+      updatedTimeline.push({
+        step: "Withdrawn",
+        note: `Shipment was withdrawn/cancelled by ${user?.fullName || "Staff"}.`,
+        status: "COMPLETED",
+        date: new Date()
+      });
+    }
+
+    doc.timeline = updatedTimeline;
+    doc.markModified("timeline");
+  }
 };
 
 // Build query scoped to a user's branch (STAFF) or company branches (ADMIN)
@@ -179,36 +261,22 @@ export const createDispatch = async (req, res, next) => {
 export const updateDispatchStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
-    const allowed = ["RECEIVED", "IN_TRANSIT", "WAITING_RECEIPT", "OVERDUE", "PENDING", "SENT"];
+    const allowed = ["RECEIVED", "IN_TRANSIT", "WAITING_RECEIPT", "OVERDUE", "PENDING", "SENT", "FAILED"];
 
     if (!allowed.includes(status)) {
       return res.status(400).json({ message: "Invalid status code" });
     }
 
     const scopeQuery = await buildScopeQuery(req.user);
-    const update = { status };
-
-    if (status === "RECEIVED") {
-      update.$push = {
-        timeline: {
-          step: "Received",
-          note: "Shipment successfully received and verified at destination.",
-          status: "COMPLETED",
-          date: new Date()
-        }
-      };
-      // Mark previous steps as COMPLETED if they were not
-      await Dispatch.updateOne(
-        { _id: req.params.id, ...scopeQuery, "timeline.status": "IN_PROGRESS" },
-        { $set: { "timeline.$.status": "COMPLETED", "timeline.$.date": new Date() } }
-      );
+    const doc = await Dispatch.findOne({ _id: req.params.id, ...scopeQuery });
+    if (!doc) {
+      return res.status(404).json({ message: "Dispatch not found or unauthorized" });
     }
 
-    const updated = await Dispatch.findOneAndUpdate(
-      { _id: req.params.id, ...scopeQuery }, 
-      update, 
-      { new: true }
-    )
+    syncTimelineWithStatus(doc, status, req.user);
+
+    await doc.save();
+    const updated = await Dispatch.findById(doc._id)
       .populate("fromBranchId", "name")
       .populate("toBranchId", "name")
       .lean();
@@ -247,13 +315,24 @@ export const updateDispatch = async (req, res, next) => {
     if (dispatchDate) updateData.dispatchDate = dispatchDate;
     if (geoTrackingEnabled !== undefined) updateData.geoTrackingEnabled = geoTrackingEnabled;
     if (toBranchId) updateData.toBranchId = toBranchId;
-    if (status) updateData.status = status;
 
-    const updated = await Dispatch.findOneAndUpdate(
-      { _id: req.params.id, ...scopeQuery },
-      { $set: updateData },
-      { new: true }
-    )
+    const doc = await Dispatch.findOne({ _id: req.params.id, ...scopeQuery });
+    if (!doc) {
+      return res.status(404).json({ message: "Dispatch record not found or unauthorized" });
+    }
+
+    // Apply basic updates
+    Object.keys(updateData).forEach(key => {
+      if (key !== 'status') doc[key] = updateData[key];
+    });
+
+    // Handle status with timeline sync
+    if (status) {
+      syncTimelineWithStatus(doc, status, req.user);
+    }
+
+    await doc.save();
+    const updated = await Dispatch.findById(doc._id)
       .populate("fromBranchId", "name")
       .populate("toBranchId", "name")
       .lean();

@@ -5,7 +5,7 @@ import { colors } from "../theme/colors";
 import { statusLabel } from "../utils/helpers";
 
 const statusColor = {
-  SENT: colors.success,
+  SENT: colors.info,
   RECEIVED: colors.success,
   IN_TRANSIT: colors.primary,
   WAITING_RECEIPT: colors.warning,

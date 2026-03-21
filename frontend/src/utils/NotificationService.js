@@ -1,5 +1,5 @@
 
-import * as React from "react";
+import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import * as Application from "expo-application";
 import Constants from "expo-constants";
@@ -17,9 +17,6 @@ export const registerForPushNotificationsAsync = async () => {
   }
 
   try {
-    // Lazy load expo-notifications only when needed (not in Expo Go)
-    const Notifications = await import("expo-notifications");
-
     // Set up notification handler only for development builds
     Notifications.setNotificationHandler({
       handleNotification: async () => ({

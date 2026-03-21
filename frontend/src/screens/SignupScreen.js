@@ -13,6 +13,7 @@ export const SignupScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // Added showPassword state
   const [registrationKey, setRegistrationKey] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -83,14 +84,19 @@ export const SignupScreen = ({ navigation }) => {
           />
 
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="••••••••"
-            placeholderTextColor={colors.muted}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="••••••••"
+              placeholderTextColor={colors.muted}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <Ionicons name={showPassword ? "eye-off" : "eye"} size={24} color={colors.muted} />
+            </Pressable>
+          </View>
 
           <Pressable style={styles.signupBtn} onPress={handleSignup} disabled={loading}>
             {loading ? <ActivityIndicator color={colors.text} /> : <Text style={styles.signupTxt}>Signup & Join Branch</Text>}
@@ -115,6 +121,9 @@ const styles = StyleSheet.create({
   form: { backgroundColor: colors.card, padding: 24, borderRadius: 24, borderWidth: 1, borderColor: colors.border },
   label: { color: colors.text, fontSize: 16, fontWeight: "600", marginBottom: 8, marginTop: 16 },
   input: { backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 16, color: colors.text, fontSize: 16 },
+  passwordContainer: { flexDirection: "row", alignItems: "center", backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border, borderRadius: 16 },
+  passwordInput: { flex: 1, padding: 16, color: colors.text, fontSize: 16 },
+  eyeIcon: { padding: 16 },
   signupBtn: { backgroundColor: colors.primary, padding: 18, borderRadius: 16, alignItems: "center", marginTop: 30 },
   signupTxt: { color: colors.text, fontSize: 18, fontWeight: "bold" },
   footerRow: { marginTop: 30, alignItems: "center" },

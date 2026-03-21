@@ -11,6 +11,7 @@ export const LoginScreen = ({ navigation }) => {
   const { login } = useAppData();
   const [email, setEmail] = useState(""); 
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -50,14 +51,19 @@ export const LoginScreen = ({ navigation }) => {
           />
 
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor={colors.muted}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Enter your password"
+              placeholderTextColor={colors.muted}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <Ionicons name={showPassword ? "eye-off" : "eye"} size={24} color={colors.muted} />
+            </Pressable>
+          </View>
 
           <Pressable style={styles.loginBtn} onPress={handleLogin} disabled={loading}>
             {loading ? <ActivityIndicator color={colors.text} /> : <Text style={styles.loginTxt}>Sign In</Text>}
@@ -84,6 +90,9 @@ const styles = StyleSheet.create({
   form: { backgroundColor: colors.card, padding: 24, borderRadius: 24, borderWidth: 1, borderColor: colors.border },
   label: { color: colors.text, fontSize: 16, fontWeight: "600", marginBottom: 8, marginTop: 16 },
   input: { backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 16, color: colors.text, fontSize: 16 },
+  passwordContainer: { flexDirection: "row", alignItems: "center", backgroundColor: colors.bgSoft, borderWidth: 1, borderColor: colors.border, borderRadius: 16 },
+  passwordInput: { flex: 1, padding: 16, color: colors.text, fontSize: 16 },
+  eyeIcon: { padding: 16 },
   loginBtn: { backgroundColor: colors.primary, padding: 18, borderRadius: 16, alignItems: "center", marginTop: 30 },
   loginTxt: { color: colors.text, fontSize: 18, fontWeight: "bold" },
   signupLinkWrap: { marginTop: 30, alignItems: "center" },

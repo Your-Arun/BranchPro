@@ -1,3 +1,7 @@
+import * as Notifications from "expo-notifications";
+import { getNotificationCapability, scheduleLocalNotification, showInAppNotification, testLocalNotification } from "./LocalNotificationService";
+import { registerForPushNotificationsAsync } from "./NotificationService";
+
 class NotificationManager {
   constructor() {
     this.capability = null;
@@ -5,54 +9,52 @@ class NotificationManager {
   }
 
   async initialize() {
-    // Lazy load notification service only when needed
-    const { getNotificationCapability } = await import("./LocalNotificationService");
+    // Configure global behavior for foreground notifications
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+
     this.capability = getNotificationCapability();
     
-    if (this.capability.canUsePush) {
-      // Try to register for push notifications
-      const { registerForPushNotificationsAsync } = await import("./NotificationService");
-      this.pushToken = await registerForPushNotificationsAsync();
-    } else if (this.capability.canUseLocal) {
-      // Show guidance for development build
-      const { showInAppNotification } = await import("./LocalNotificationService");
-      showInAppNotification(
-        "Limited Notifications",
-        this.capability.recommendation,
-        "warning"
-      );
+    try {
+      if (this.capability.canUsePush) {
+        this.pushToken = await registerForPushNotificationsAsync();
+      } else if (this.capability.canUseLocal) {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== 'granted') {
+          console.log("Local notification permissions not granted");
+        }
+      }
+    } catch (error) {
+      console.log("Notification initialization error:", error);
     }
 
     return this.capability;
   }
 
   async sendNotification(title, body, data = {}) {
-    if (this.capability.canUsePush && this.pushToken) {
-      // Use push notification (would need backend integration)
+    if (this.capability?.canUsePush && this.pushToken) {
       console.log("Sending push notification:", { title, body, token: this.pushToken });
       return { success: true, type: "push" };
-    } else if (this.capability.canUseLocal) {
-      // Use local notification as fallback
-      const { scheduleLocalNotification } = await import("./LocalNotificationService");
+    } else if (this.capability?.canUseLocal) {
       const success = await scheduleLocalNotification(title, body, data);
       return { success, type: success ? "local" : "failed" };
     } else {
-      // Use in-app notification as last resort
-      const { showInAppNotification } = await import("./LocalNotificationService");
       showInAppNotification(title, body, "info");
       return { success: true, type: "in-app" };
     }
   }
 
   async testNotifications() {
-    const { getNotificationCapability } = await import("./LocalNotificationService");
     const capability = getNotificationCapability();
     
     if (capability.canUsePush) {
-      const { registerForPushNotificationsAsync } = await import("./NotificationService");
       const token = await registerForPushNotificationsAsync();
       if (token) {
-        const { showInAppNotification } = await import("./LocalNotificationService");
         showInAppNotification(
           "Push Notifications Ready",
           "You will receive shipment updates via push notifications.",
@@ -63,7 +65,6 @@ class NotificationManager {
     }
 
     if (capability.canUseLocal) {
-      const { testLocalNotification, showInAppNotification } = await import("./LocalNotificationService");
       const success = await testLocalNotification();
       if (success) {
         showInAppNotification(
@@ -75,7 +76,6 @@ class NotificationManager {
       }
     }
 
-    const { showInAppNotification } = await import("./LocalNotificationService");
     showInAppNotification(
       "Notifications Limited",
       "Please use a development build for full push notification support.",
@@ -85,10 +85,7 @@ class NotificationManager {
   }
 
   async getCapability() {
-    if (this.capability) {
-      return this.capability;
-    }
-    const { getNotificationCapability } = await import("./LocalNotificationService");
+    if (this.capability) return this.capability;
     return getNotificationCapability();
   }
 
@@ -99,5 +96,4 @@ class NotificationManager {
 
 // Create singleton instance
 const notificationManager = new NotificationManager();
-
 export default notificationManager;

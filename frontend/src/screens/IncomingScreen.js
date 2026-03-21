@@ -28,11 +28,13 @@ const tabs = [
 ];
 
 const statusColors = {
-  SENT: colors.primary,
-  IN_TRANSIT: colors.warning,
-  WAITING_RECEIPT: colors.info,
+  SENT: colors.info,
+  IN_TRANSIT: colors.primary,
+  WAITING_RECEIPT: colors.warning,
+  PENDING: colors.warning,
   RECEIVED: colors.success,
   OVERDUE: colors.danger,
+  FAILED: colors.danger,
 };
 
 const DispatchItem = React.memo(({ item, onPress, loading }) => {
@@ -106,7 +108,7 @@ export const IncomingScreen = ({ navigation, route }) => {
       if (active === "TRANSIT") {
         if (d.status !== "SENT" && d.status !== "IN_TRANSIT") return false;
       } else if (active === "WAITING") {
-        if (d.status !== "WAITING_RECEIPT" && d.status !== "PENDING") return false;
+        if (d.status !== "WAITING_RECEIPT" && d.status !== "PENDING" && d.status !== "OVERDUE") return false;
       } else if (active !== "ALL" && d.status !== active) {
         return false;
       }
