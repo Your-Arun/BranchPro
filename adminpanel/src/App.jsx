@@ -223,6 +223,25 @@ export default function App() {
     }
   };
 
+  const downloadCSV = (data, filename, columns) => {
+    if (!data || data.length === 0) return alert("No data to export");
+    const headers = columns.map(col => col.label).join(",");
+    const rows = data.map(item => 
+      columns.map(col => {
+        let val = col.key.split('.').reduce((o, i) => o?.[i], item) || "";
+        return `"${String(val).replace(/"/g, '""')}"`;
+      }).join(",")
+    );
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${filename}_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const onDeleteDispatch = async (id) => {
     if (!window.confirm("Delete this dispatch?")) return;
     try {
@@ -444,7 +463,18 @@ export default function App() {
       </section>
 
       <section className="card table-card">
-        <h3><i data-lucide="list" style={{ color: 'var(--primary)' }}></i> Branch Registry</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '20px' }}>
+          <h3><i data-lucide="list" style={{ color: 'var(--primary)' }}></i> Branch Registry</h3>
+          <button className="secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => downloadCSV(branches, "Branches", [
+            { label: "Name", key: "name" },
+            { label: "Code", key: "code" },
+            { label: "Key", key: "registrationKey" },
+            { label: "City", key: "city" },
+            { label: "Status", key: "status" }
+          ])}>
+            <i data-lucide="sheet" style={{ width: '16px' }}></i> Export Excel
+          </button>
+        </div>
         <div className="table-wrapper">
           <table>
             <thead>
@@ -486,7 +516,17 @@ export default function App() {
       </section>
 
       <section className="card table-card" style={{ marginTop: '32px' }}>
-        <h3><i data-lucide="users-round" style={{ color: '#10b981' }}></i> User Personnel</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '20px' }}>
+          <h3><i data-lucide="users-round" style={{ color: '#10b981' }}></i> User Personnel</h3>
+          <button className="secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => downloadCSV(users, "Users", [
+            { label: "FullName", key: "fullName" },
+            { label: "Email", key: "email" },
+            { label: "Role", key: "role" },
+            { label: "Branch", key: "branchId.name" }
+          ])}>
+            <i data-lucide="file-spreadsheet" style={{ width: '16px' }}></i> Export Excel
+          </button>
+        </div>
         <div className="table-wrapper">
           <table>
             <thead>
@@ -532,7 +572,18 @@ export default function App() {
       </section>
 
       <section className="card table-card" style={{ marginTop: '32px' }}>
-        <h3><i data-lucide="history" style={{ color: '#f59e0b' }}></i> Transit History</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '20px' }}>
+          <h3><i data-lucide="history" style={{ color: '#f59e0b' }}></i> Transit History</h3>
+          <button className="secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => downloadCSV(dispatches, "TransitLogs", [
+            { label: "TrackingID", key: "trackingId" },
+            { label: "Source", key: "fromBranch" },
+            { label: "Destination", key: "toBranch" },
+            { label: "Status", key: "status" },
+            { label: "Date", key: "dispatchDate" }
+          ])}>
+            <i data-lucide="table" style={{ width: '16px' }}></i> Export Excel
+          </button>
+        </div>
         <div className="table-wrapper">
           <table>
             <thead>
