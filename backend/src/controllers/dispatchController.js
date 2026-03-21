@@ -1,5 +1,7 @@
 import { Branch } from "../models/Branch.js";
 import { Dispatch } from "../models/Dispatch.js";
+import { User } from "../models/User.js";
+import { sendDispatchEmail } from "../utils/mailer.js";
 
 const statusMap = {
   ALL: null,
@@ -251,6 +253,17 @@ export const createDispatch = async (req, res, next) => {
       .populate("fromBranchId", "name")
       .populate("toBranchId", "name")
       .lean();
+
+    // Trigger email alert in the background
+    try {
+      const destUsers = await User.find({ branchId: toBranchId }).select("email").lean();
+      const destEmails = destUsers.map(u => u.email).filter(Boolean);
+      if (destEmails.length > 0) {
+        sendDispatchEmail(destEmails, populated, populated.fromBranchId?.name, populated.toBranchId?.name).catch(console.error);
+      }
+    } catch (err) {
+      console.log('Error triggering email:', err.message);
+    }
 
     res.status(201).json(toDto(populated));
   } catch (error) {
