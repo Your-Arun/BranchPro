@@ -12,6 +12,20 @@ BranchFlow Pro is a complete software system for a courier or logistics company.
 
 Everything happens in real-time, so if a shipment is marked "Received" at one branch, the Admin instantly sees it on their screen!
 
+<br>
+
+<div align="center">
+  <h3>📊 Quick Presentation Slide (Elevator Pitch)</h3>
+  <table>
+    <tr>
+      <td width="33%"><strong>🛑 The Problem</strong><br>Logistics companies struggle to sync branch deliveries and dispatch data in real-time. Staff make errors when receiving packets.</td>
+      <td width="33%"><strong>💡 Our Solution</strong><br>A unified system (Admin Web + Admin App + Staff App) handling full branch ops. Simple login with "Branch Codes".</td>
+      <td width="33%"><strong>🎯 Key Benefits</strong><br>✔️ Real-time dashboards<br>✔️ Offline-caching capability<br>✔️ Error-free branch joining<br>✔️ Secure "One-Tap" logic</td>
+    </tr>
+  </table>
+  <p><em>(Perfect for a quick 30-second summary or meeting presentation!)</em></p>
+</div>
+
 ---
 
 ## 🏗️ The 4 Main Parts of the Project
