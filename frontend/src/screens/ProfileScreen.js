@@ -1,6 +1,8 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
 import Toast from "react-native-toast-message";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,13 +10,57 @@ import { colors } from "../theme/colors";
 import { useAppData } from "../utils/AppDataContext";
 
 export const ProfileScreen = () => {
-  const { userAuth, logout } = useAppData();
+  const { userAuth, logout, dispatches } = useAppData();
+  const [exporting, setExporting] = useState(false);
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to log out of the Staff Portal?", [
       { text: "Cancel", style: "cancel" },
       { text: "Logout", style: "destructive", onPress: logout }
     ]);
+  };
+
+  const exportToExcel = async () => {
+    try {
+      setExporting(true);
+      
+      const csvHeader = "Tracking ID,From Branch,To Branch,Status,Category,Courier,Dispatch Date,Notes\n";
+      const csvRows = (dispatches || []).map(d => {
+        const escapeCsv = (str) => `"${String(str || "").replace(/"/g, '""')}"`;
+        return [
+          escapeCsv(d.trackingId),
+          escapeCsv(d.fromBranch),
+          escapeCsv(d.toBranch),
+          escapeCsv(d.status),
+          escapeCsv(d.category),
+          escapeCsv(d.courierName),
+          escapeCsv(new Date(d.dispatchDate || d.createdAt).toLocaleDateString()),
+          escapeCsv(d.description)
+        ].join(",");
+      }).join("\n");
+      
+      const fileString = csvHeader + csvRows;
+      const fileName = userAuth?.role === "ADMIN" 
+        ? "Total_Company_Dispatches.csv" 
+        : `Branch_${userAuth?.branch?.code || 'Dispatches'}.csv`;
+
+      const filePath = FileSystem.documentDirectory + fileName;
+      
+      await FileSystem.writeAsStringAsync(filePath, fileString, {
+        encoding: FileSystem.EncodingType.UTF8
+      });
+      
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(filePath, { UTI: 'public.comma-separated-values-text', mimeType: 'text/csv' });
+      } else {
+        Toast.show({ type: "error", text1: "Unsupported", text2: "Sharing not available on this device" });
+      }
+    } catch (e) {
+      console.error(e);
+      Toast.show({ type: "error", text1: "Export Error", text2: "Could not generate Excel sheet" });
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -74,9 +120,16 @@ export const ProfileScreen = () => {
 
         {/* ── Support & Actions ── */}
         <View style={styles.actionsCard}>
-          <Pressable style={styles.actionRow} onPress={() => Toast.show({ type: "info", text1: "Support", text2: "Contact your Admin for account modifications." })}>
+          <Pressable style={styles.actionRow} onPress={exportToExcel} disabled={exporting}>
+            <Ionicons name="document-text-outline" size={24} color={colors.primary} style={{ marginRight: 14 }} />
+            <Text style={[styles.actionText, { color: colors.primary, fontSize: 17 }]}>{userAuth?.role === "ADMIN" ? "Export Total Excel Report" : "Export Branch Excel Report"}</Text>
+            {exporting ? <ActivityIndicator size="small" color={colors.primary} /> : <Ionicons name="download-outline" size={20} color={colors.primary} />}
+          </Pressable>
 
-            <Ionicons name="help-circle-outline" size={22} color={colors.text} style={{ marginRight: 12 }} />
+          <View style={styles.divider} />
+
+          <Pressable style={styles.actionRow} onPress={() => Toast.show({ type: "info", text1: "Support", text2: "Contact your Admin for account modifications." })}>
+            <Ionicons name="help-circle-outline" size={24} color={colors.text} style={{ marginRight: 14 }} />
             <Text style={styles.actionText}>Help & Support</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.muted} />
           </Pressable>

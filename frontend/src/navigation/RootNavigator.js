@@ -21,6 +21,16 @@ const Stack = createNativeStackNavigator();
 
 const MainTabs = () => {
   const insets = useSafeAreaInsets();
+  const { dispatches, userAuth } = useAppData();
+
+  const unconfirmedCount = React.useMemo(() => {
+    if (!userAuth || userAuth.role === "ADMIN") return 0; // Admin doesn't need personal incoming badge
+    const branchIdStr = String(userAuth.branch?._id || userAuth.branchId);
+    return dispatches.filter(d => 
+      String(d.toBranchId) === branchIdStr && 
+      (d.status !== "RECEIVED" && d.status !== "FAILED" && d.status !== "COMPLETED")
+    ).length;
+  }, [dispatches, userAuth]);
 
   return (
     <Tab.Navigator
@@ -70,7 +80,15 @@ const MainTabs = () => {
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Incoming" component={IncomingScreen} options={{ tabBarLabel: "Receive" }} />
+      <Tab.Screen 
+        name="Incoming" 
+        component={IncomingScreen} 
+        options={{ 
+          tabBarLabel: "Receive",
+          tabBarBadge: unconfirmedCount > 0 ? unconfirmedCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.danger, color: "#fff" }
+        }} 
+      />
       <Tab.Screen name="Dispatch" component={CreateDispatchScreen} options={{ tabBarLabel: "Send" }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
