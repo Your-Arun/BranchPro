@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View, ActivityIndicator, ScrollView } from "react-native";
 import Toast from "react-native-toast-message";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -103,49 +103,61 @@ export const DispatchDetailsScreen = ({ route, navigation }) => {
         </Pressable>
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.routeRow}>
-          <View style={styles.routeNode}>
-            <Text style={styles.routeLabel}>FROM</Text>
-            <Text style={styles.routeName}>{item.fromBranch}</Text>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20, paddingTop: 10 }} showsVerticalScrollIndicator={false}>
+        <View style={styles.card}>
+          <View style={styles.routeRow}>
+            <View style={styles.routeNode}>
+              <Text style={styles.routeLabel}>FROM</Text>
+              <Text style={styles.routeName}>{item.fromBranch}</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={20} color={colors.primary} style={{ marginTop: 20 }} />
+            <View style={[styles.routeNode, { alignItems: "flex-end" }]}>
+              <Text style={styles.routeLabel}>TO</Text>
+              <Text style={styles.routeName}>{item.toBranch}</Text>
+            </View>
           </View>
-          <Ionicons name="arrow-forward" size={20} color={colors.primary} style={{ marginTop: 20 }} />
-          <View style={[styles.routeNode, { alignItems: "flex-end" }]}>
-            <Text style={styles.routeLabel}>TO</Text>
-            <Text style={styles.routeName}>{item.toBranch}</Text>
+          <View style={styles.divider} />
+          <View style={styles.infoGrid}>
+            <View>
+              <Text style={styles.infoLabel}>CATEGORY</Text>
+              <Text style={styles.infoVal}>{item.category}</Text>
+            </View>
+            <View>
+              <Text style={styles.infoLabel}>COURIER</Text>
+              <Text style={styles.infoVal}>{item.courierName}</Text>
+            </View>
           </View>
         </View>
-        <View style={styles.divider} />
-        <View style={styles.infoGrid}>
-          <View>
-            <Text style={styles.infoLabel}>CATEGORY</Text>
-            <Text style={styles.infoVal}>{item.category}</Text>
-          </View>
-          <View>
-            <Text style={styles.infoLabel}>COURIER</Text>
-            <Text style={styles.infoVal}>{item.courierName}</Text>
-          </View>
-        </View>
-      </View>
 
-      <Text style={styles.sectionTitle}>Movement Timeline</Text>
-      <View style={styles.timelineBox}>
-        {(item.timeline || []).map((t, idx) => (
-          <View key={idx} style={styles.timelineRow}>
-            <View style={styles.timelineLeft}>
-              <View style={[styles.dotContainer, { borderColor: dotColor[t.status] || colors.border }]}>
-                 <Ionicons name={dotIcon[t.status] || "ellipse"} size={14} color={dotColor[t.status] || colors.muted} />
+        <Text style={styles.sectionTitle}>Movement Timeline</Text>
+        <View style={styles.timelineBox}>
+          {(item.timeline || []).map((t, idx) => (
+            <View key={idx} style={styles.timelineRow}>
+              <View style={styles.timelineLeft}>
+                <View style={[styles.dotContainer, { borderColor: dotColor[t.status] || colors.border }]}>
+                   <Ionicons name={dotIcon[t.status] || "ellipse"} size={14} color={dotColor[t.status] || colors.muted} />
+                </View>
+                {idx < item.timeline.length - 1 && <View style={styles.line} />}
               </View>
-              {idx < item.timeline.length - 1 && <View style={styles.line} />}
+              <View style={styles.timelineContent}>
+                <Text style={[styles.stepText, t.status === "IN_PROGRESS" && { color: colors.primary }]}>{t.step}</Text>
+                {t.note && t.note.includes("verified by ") && t.note.includes(" at destination.") ? (
+                  <Text style={styles.stepNote}>
+                    {t.note.split("verified by ")[0]}verified by{" "}
+                    <Text style={{ color: colors.danger, fontWeight: "bold" }}>
+                      {t.note.split("verified by ")[1].split(" at destination.")[0]}
+                    </Text>
+                    {" "}at destination.
+                  </Text>
+                ) : (
+                  <Text style={styles.stepNote}>{t.note}</Text>
+                )}
+                {t.date && <Text style={styles.stepDate}>{new Date(t.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</Text>}
+              </View>
             </View>
-            <View style={styles.timelineContent}>
-              <Text style={[styles.stepText, t.status === "IN_PROGRESS" && { color: colors.primary }]}>{t.step}</Text>
-              <Text style={styles.stepNote}>{t.note}</Text>
-              {t.date && <Text style={styles.stepDate}>{new Date(t.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</Text>}
-            </View>
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      </ScrollView>
 
       {canConfirm ? (
         <Pressable style={styles.confirmBtn} onPress={onConfirm} disabled={loading}>
