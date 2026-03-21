@@ -1,5 +1,6 @@
 import { loginUser, registerUser, adminRegister, getProfile } from "../controllers/authController.js";
 import { protect } from "../middleware/auth.js";
+import { Router } from "express";
 
 const router = Router();
 
