@@ -247,32 +247,48 @@ tr:last-child td { border-bottom: none; }
 .status-badge.active { background: rgba(16, 185, 129, 0.1); color: var(--success); }
 .status-badge.inactive { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
-/* Login UX */
+/* Login UX Refined */
 .login-box {
   background: var(--card-bg);
   backdrop-filter: blur(40px);
   border: 1px solid var(--card-border);
-  border-radius: 32px;
-  padding: 48px;
+  border-radius: 28px;
+  padding: 32px;
   width: 100%;
-  max-width: 480px;
+  max-width: 420px;
   text-align: center;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
+.login-box h1 {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.login-box p {
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  color: var(--text-muted);
+}
+
 .logo-container {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 32px;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
   background: linear-gradient(135deg, var(--primary) 0%, #c084fc 100%);
-  border-radius: 30px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 15px 30px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
 }
 
-.logo-container img { width: 60%; height: auto; filter: brightness(0) invert(1); }
+.logo-container img { width: 55%; height: auto; filter: brightness(0) invert(1); }
+
+/* Compact forms for auth */
+.login-box .form { gap: 14px; }
+.login-box input { padding: 14px 16px; font-size: 0.95rem; }
+.login-box button { padding: 14px; }
 
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

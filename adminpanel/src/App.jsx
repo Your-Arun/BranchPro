@@ -274,7 +274,7 @@ export default function App() {
               <button type="submit" disabled={loading}>
                 {loading ? <div className="loading-dots"><div className="dot"></div><div className="dot"></div><div className="dot"></div></div> : "Sign Up"}
               </button>
-              <button type="button" className="secondary" style={{ marginTop: '12px', width: '100%', border: 'none', background: 'transparent', textDecoration: 'underline' }} onClick={() => setIsRegistering(false)}>
+              <button type="button" className="secondary" style={{ marginTop: '8px', width: '100%', border: 'none', background: 'transparent', textDecoration: 'underline' }} onClick={() => setIsRegistering(false)}>
                 Already have an account? Login
               </button>
             </form>
@@ -292,7 +292,7 @@ export default function App() {
               <button type="submit" disabled={loading}>
                 {loading ? <div className="loading-dots"><div className="dot"></div><div className="dot"></div><div className="dot"></div></div> : "Login"}
               </button>
-              <button type="button" className="secondary" style={{ marginTop: '12px', width: '100%', border: 'none', background: 'transparent', textDecoration: 'underline' }} onClick={() => setIsRegistering(true)}>
+              <button type="button" className="secondary" style={{ marginTop: '8px', width: '100%', border: 'none', background: 'transparent', textDecoration: 'underline' }} onClick={() => setIsRegistering(true)}>
                 New Admin? Create Account
               </button>
             </form>
@@ -306,12 +306,12 @@ export default function App() {
   if (isFetchingData) {
       return (
           <div className="center">
-              <div className="login-box" style={{ padding: '60px' }}>
+              <div className="login-box">
                   <div className="logo-container" style={{ animation: 'pulse 2s infinite' }}>
                     <img src={logo} alt="Loading" />
                   </div>
                   <h2>Syncing Ecosystem...</h2>
-                  <div className="loading-dots" style={{ marginTop: '20px' }}>
+                  <div className="loading-dots" style={{ marginTop: '16px' }}>
                     <div className="dot"></div><div className="dot"></div><div className="dot"></div>
                   </div>
               </div>
