@@ -1,4 +1,8 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// Force IPv4 globally so Gmail SMTP doesn't try IPv6
+dns.setDefaultResultOrder('ipv4first');
 
 // Create a transporter using standard SMTP (Wait for user to provide credentials via .env)
 export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, toBranchName) => {
@@ -14,6 +18,7 @@ export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, to
       host: 'smtp.gmail.com',
       port: 465,
       secure: true,
+      family: 4, // Force IPv4
       auth: {
         user: process.env.SMTP_EMAIL,
         pass: process.env.SMTP_PASSWORD
@@ -83,6 +88,7 @@ export const sendStatusUpdateEmail = async (emails, dispatchData, fromBranchName
       host: 'smtp.gmail.com',
       port: 465,
       secure: true,
+      family: 4, // Force IPv4
       auth: {
         user: process.env.SMTP_EMAIL,
         pass: process.env.SMTP_PASSWORD
