@@ -1,12 +1,49 @@
 import nodemailer from 'nodemailer';
 import dns from 'dns';
+import net from 'net';
 
-// Force IPv4 globally so Gmail SMTP doesn't try IPv6
+// Force Node.js DNS to prefer IPv4 over IPv6
 dns.setDefaultResultOrder('ipv4first');
 
-// Create a transporter using standard SMTP (Wait for user to provide credentials via .env)
+// Resolve Gmail SMTP to IPv4 manually
+const resolveIPv4 = (hostname) => {
+  return new Promise((resolve, reject) => {
+    dns.resolve4(hostname, (err, addresses) => {
+      if (err || !addresses.length) {
+        reject(err || new Error('No IPv4 addresses found'));
+      } else {
+        resolve(addresses[0]);
+      }
+    });
+  });
+};
+
+// Create a reusable transporter with forced IPv4
+const createGmailTransporter = async () => {
+  const ipv4Address = await resolveIPv4('smtp.gmail.com');
+  console.log(`[Mailer] Resolved smtp.gmail.com → ${ipv4Address} (IPv4)`);
+
+  return nodemailer.createTransport({
+    host: ipv4Address,
+    port: 587,
+    secure: false,
+    requireTLS: true,
+    tls: {
+      servername: 'smtp.gmail.com', // Required for TLS cert validation
+      rejectUnauthorized: true
+    },
+    auth: {
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASSWORD
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000
+  });
+};
+
+// Create dispatch notification email
 export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, toBranchName) => {
-  // If no credentials, we just log and skip to avoid crashing
   if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
     console.log(`[Email Skipped] Missing SMTP_EMAIL or SMTP_PASSWORD in .env file.`);
     console.log(`Would have sent notification to: ${emails.join(', ')}`);
@@ -14,16 +51,7 @@ export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, to
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      family: 4, // Force IPv4
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD
-      }
-    });
+    const transporter = await createGmailTransporter();
 
     const mailOptions = {
       from: `"BranchFlow Alerts" <${process.env.SMTP_EMAIL}>`,
@@ -46,10 +74,11 @@ export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, to
       `
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log(`[Dispatch Email] Successfully sent to ${emails.join(', ')}`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[Dispatch Email] ✅ Successfully sent to ${emails.join(', ')} | MessageId: ${info.messageId}`);
   } catch (error) {
-    console.error('[Dispatch Email] Failed:', error.message);
+    console.error('[Dispatch Email] ❌ Failed:', error.message);
+    console.error('[Dispatch Email] Full Error:', error);
   }
 };
 
@@ -84,16 +113,7 @@ export const sendStatusUpdateEmail = async (emails, dispatchData, fromBranchName
   const message = statusMessages[newStatus] || `status updated to ${newStatus}`;
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      family: 4, // Force IPv4
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD
-      }
-    });
+    const transporter = await createGmailTransporter();
 
     const mailOptions = {
       from: `"BranchFlow Alerts" <${process.env.SMTP_EMAIL}>`,
@@ -116,9 +136,10 @@ export const sendStatusUpdateEmail = async (emails, dispatchData, fromBranchName
       `
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log(`[Status Email] Sent to ${emails.join(', ')} for #${dispatchData.trackingId} → ${newStatus}`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[Status Email] ✅ Sent to ${emails.join(', ')} for #${dispatchData.trackingId} → ${newStatus} | MessageId: ${info.messageId}`);
   } catch (error) {
-    console.error('[Status Email] Failed:', error.message);
+    console.error('[Status Email] ❌ Failed:', error.message);
+    console.error('[Status Email] Full Error:', error);
   }
 };
