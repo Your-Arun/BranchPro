@@ -141,3 +141,42 @@ export const getProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const { fullName, email, phone, password } = req.body;
+
+    if (fullName) user.fullName = fullName;
+    if (phone !== undefined) user.phone = phone;
+    
+    if (email && email.toLowerCase() !== user.email) {
+      const emailExists = await User.findOne({ email: email.toLowerCase() });
+      if (emailExists) return res.status(400).json({ message: "Email already in use" });
+      user.email = email.toLowerCase();
+    }
+
+    if (password) user.password = password;
+
+    await user.save();
+
+    const populatedUser = await User.findById(user._id)
+      .populate("branchId", "name code city")
+      .populate("companyId", "name email phone");
+
+    res.json({
+      _id: populatedUser._id,
+      fullName: populatedUser.fullName,
+      email: populatedUser.email,
+      role: populatedUser.role,
+      phone: populatedUser.phone,
+      company: populatedUser.companyId,
+      branch: populatedUser.branchId,
+      token: generateToken(populatedUser._id)
+    });
+  } catch (error) {
+    next(error);
+  }
+};

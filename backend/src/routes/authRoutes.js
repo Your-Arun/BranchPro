@@ -1,4 +1,4 @@
-import { loginUser, registerUser, adminRegister, getProfile } from "../controllers/authController.js";
+import { loginUser, registerUser, adminRegister, getProfile, updateProfile } from "../controllers/authController.js";
 import { protect } from "../middleware/auth.js";
 import { Router } from "express";
 
@@ -9,5 +9,6 @@ router.post("/signup", registerUser);       // Staff with key
 router.post("/register", registerUser);     // Alias for Staff
 router.post("/admin-signup", adminRegister); // New Admin
 router.get("/me", protect, getProfile);
+router.put("/me", protect, updateProfile);
 
 export default router;

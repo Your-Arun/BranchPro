@@ -11,7 +11,9 @@ export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, to
 
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // Standard configuration for Gmail
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.SMTP_EMAIL,
         pass: process.env.SMTP_PASSWORD

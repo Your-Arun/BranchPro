@@ -16,6 +16,7 @@ const dispatchSchema = new mongoose.Schema(
     toBranchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: true },
     category: { type: String, required: true, trim: true },
     courierName: { type: String, required: true, trim: true },
+    docketNumber: { type: String, trim: true },
     description: { type: String, default: "", trim: true },
     dispatchDate: { type: Date, required: true },
     geoTrackingEnabled: { type: Boolean, default: true },

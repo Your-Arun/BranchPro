@@ -2,8 +2,36 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
-  const { user, logout, dispatches } = useAuth();
+  const { user, logout, dispatches, updateProfile } = useAuth();
   const [exporting, setExporting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: user?.fullName || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    password: ""
+  });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const payload = { ...formData };
+      if (!payload.password) delete payload.password;
+      await updateProfile(payload);
+      setSuccess("Profile updated successfully!");
+      setEditing(false);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const exportExcel = () => {
     setExporting(true);
@@ -48,10 +76,14 @@ const Profile = () => {
   return (
     <div>
       <h1 className="title">Profile</h1>
-      <p className="subtitle" style={{ marginBottom: '32px' }}>Manage your account setting and data</p>
+      <p className="subtitle" style={{ marginBottom: '32px' }}>Manage your account settings and data</p>
+
+      {error && <div className="card" style={{ marginBottom: '20px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid var(--danger)' }}>{error}</div>}
+      {success && <div className="card" style={{ marginBottom: '20px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', border: '1px solid var(--success)' }}>{success}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 400px) 1fr', gap: '32px' }}>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        {/* Sidebar Card */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', height: 'fit-content' }}>
           <div style={{ width: '100px', height: '100px', borderRadius: '50px', backgroundColor: 'rgba(78, 141, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '16px', border: '2px solid var(--primary)' }}>
             {user?.fullName?.[0]}
           </div>
@@ -60,12 +92,89 @@ const Profile = () => {
             {user?.role}
           </div>
           
-          <button style={{ backgroundColor: 'var(--danger)', color: '#fff', padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', width: '100%' }} onClick={logout}>
+          <button style={{ backgroundColor: 'var(--danger)', color: '#fff', padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', width: '100%', border: 'none', cursor: 'pointer' }} onClick={logout}>
             Logout from Portal
           </button>
         </div>
 
+        {/* Details Area */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Personal Details Card */}
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '14px', color: 'var(--muted)', fontWeight: 'bold', letterSpacing: '1px', margin: 0 }}>PERSONAL DETAILS</h3>
+              <button 
+                className="btn-secondary" 
+                style={{ padding: '8px 16px', fontSize: '12px' }}
+                onClick={() => {
+                  if (editing) {
+                    setFormData({ fullName: user?.fullName || "", email: user?.email || "", phone: user?.phone || "", password: "" });
+                  }
+                  setEditing(!editing);
+                }}
+              >
+                {editing ? 'Cancel' : 'Edit Profile'}
+              </button>
+            </div>
+
+            {editing ? (
+              <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                  <div className="input-group">
+                    <label>Full Name</label>
+                    <input 
+                      type="text" 
+                      value={formData.fullName} 
+                      onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                      required 
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label>Phone Number</label>
+                    <input 
+                      type="text" 
+                      value={formData.phone} 
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      placeholder="e.g. +1 234 567 890"
+                    />
+                  </div>
+                </div>
+                <div className="input-group">
+                  <label>Email Address</label>
+                  <input 
+                    type="email" 
+                    value={formData.email} 
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    required 
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Update Password (Optional)</label>
+                  <input 
+                    type="password" 
+                    placeholder="Leave blank to keep current"
+                    value={formData.password} 
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  />
+                </div>
+                <button type="submit" className="btn-primary" disabled={saving} style={{ marginTop: '8px' }}>
+                  {saving ? 'Saving...' : 'Save Profile Changes'}
+                </button>
+              </form>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+                <div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>Email Address</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>{user?.email}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>Phone</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>{user?.phone || "Not set"}</div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="card">
             <h3 style={{ fontSize: '14px', color: 'var(--muted)', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '16px' }}>ASSIGNED LOCATION</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -94,3 +203,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

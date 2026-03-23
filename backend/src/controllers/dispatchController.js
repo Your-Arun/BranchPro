@@ -256,13 +256,25 @@ export const createDispatch = async (req, res, next) => {
 
     // Trigger email alert in the background
     try {
-      const destUsers = await User.find({ branchId: toBranchId }).select("email").lean();
+      const destUsers = await User.find({ branchId: toBranchId }).select("email fullName").lean();
       const destEmails = destUsers.map(u => u.email).filter(Boolean);
-      if (destEmails.length > 0) {
-        sendDispatchEmail(destEmails, populated, populated.fromBranchId?.name, populated.toBranchId?.name).catch(console.error);
+      
+      // Also include the sender as a recipient for confirmation
+      const senderEmail = req.user?.email;
+      const allRecipients = Array.from(new Set([...destEmails, senderEmail])).filter(Boolean);
+
+      console.log(`[Email Dispatch] Target Branch: ${toBranchId}, Found ${destUsers.length} staff members.`);
+      console.log(`[Email Dispatch] Recipients: ${allRecipients.join(', ')}`);
+
+      if (allRecipients.length > 0) {
+        sendDispatchEmail(allRecipients, populated, populated.fromBranchId?.name, populated.toBranchId?.name).catch(err => {
+            console.error('[Email Dispatch] Async Error:', err.message);
+        });
+      } else {
+        console.warn(`[Email Dispatch] No recipients found (no staff at branch and no sender email). No email sent.`);
       }
     } catch (err) {
-      console.log('Error triggering email:', err.message);
+      console.error('[Email Dispatch] Trigger Error:', err.message);
     }
 
     res.status(201).json(toDto(populated));

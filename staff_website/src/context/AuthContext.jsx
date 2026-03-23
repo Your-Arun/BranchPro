@@ -95,9 +95,16 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const updateProfile = async (payload) => {
+    const { data } = await api.put("/auth/me", payload);
+    localStorage.setItem('userInfo', JSON.stringify(data));
+    setUser(data);
+    return data;
+  };
+
   return (
     <AuthContext.Provider value={{
-      user, login, signup, logout, loading, error, dashboard, dispatches, branches, refresh: loadAll, createDispatch, updateStatus, api
+      user, login, signup, logout, loading, error, dashboard, dispatches, branches, refresh: loadAll, createDispatch, updateStatus, updateProfile, api
     }}>
       {children}
     </AuthContext.Provider>
