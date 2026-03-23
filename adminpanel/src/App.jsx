@@ -40,6 +40,8 @@ export default function App() {
   const [editingBranchId, setEditingBranchId] = useState("");
   const [userForm, setUserForm] = useState({ fullName: "", email: "", password: "", role: "STAFF", branchId: "" });
   const [editingUserId, setEditingUserId] = useState("");
+  const [dispatchForm, setDispatchForm] = useState({ trackingId: "", toBranchId: "", category: "", courierName: "", status: "SENT", priority: "MEDIUM" });
+  const [editingDispatchId, setEditingDispatchId] = useState("");
 
   const isLoggedIn = Boolean(token && profile?.role === "ADMIN");
   const [isFetchingData, setIsFetchingData] = useState(isLoggedIn); // Start true if already logged in
@@ -171,6 +173,7 @@ export default function App() {
       code: branch.code,
       status: branch.status
     });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const onDeleteBranch = async (id) => {
@@ -203,13 +206,16 @@ export default function App() {
 
   const startEditUser = (user) => {
     setEditingUserId(user._id);
+    // Handle populated branchId object from the users list
+    const bId = user.branchId?._id || user.branchId || "";
     setUserForm({
       fullName: user.fullName,
       email: user.email,
       password: "",
       role: user.role,
-      branchId: user.branchId || ""
+      branchId: bId
     });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const onDeleteUser = async (id) => {
@@ -251,6 +257,36 @@ export default function App() {
     } catch (e2) {
       setError(e2.message);
     }
+  };
+  
+  const onDispatchSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setError("");
+      setLoading(true);
+      await request(`/admin/dispatches/${editingDispatchId}`, { method: "PUT", token, body: dispatchForm });
+      setEditingDispatchId("");
+      setDispatchForm({ trackingId: "", toBranchId: "", category: "", courierName: "", status: "SENT", priority: "MEDIUM" });
+      await loadAdminData();
+    } catch (e2) {
+      setError(e2.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startEditDispatch = (dispatch) => {
+    setEditingDispatchId(dispatch._id);
+    setDispatchForm({
+      trackingId: dispatch.trackingId,
+      toBranchId: dispatch.toBranchId,
+      category: dispatch.category,
+      courierName: dispatch.courierName,
+      status: dispatch.status,
+      priority: dispatch.priority || "MEDIUM"
+    });
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const [showAuthPass, setShowAuthPass] = useState(false);
@@ -407,10 +443,10 @@ export default function App() {
       </div>
 
       <section className="grid">
-        <div className="card">
+        <div className={`card ${editingBranchId ? 'edit-mode-active' : ''}`}>
           <h3>
-            <i data-lucide={editingBranchId ? "edit-3" : "plus-circle"} style={{ color: 'var(--primary)' }}></i>
-            {editingBranchId ? "Modify Branch" : "Establish Branch"}
+            <i data-lucide={editingBranchId ? "edit-3" : "plus-circle"} style={{ color: editingBranchId ? '#f59e0b' : 'var(--primary)' }}></i>
+            {editingBranchId ? `Edit Branch: ${branchForm.name}` : "Establish Branch"}
           </h3>
           <form onSubmit={onBranchSubmit} className="form">
             <input placeholder="Branch Name" value={branchForm.name} onChange={(e) => setBranchForm((s) => ({ ...s, name: e.target.value }))} required />
@@ -428,10 +464,10 @@ export default function App() {
           </form>
         </div>
 
-        <div className="card">
+        <div className={`card ${editingUserId ? 'edit-mode-active' : ''}`}>
           <h3>
-            <i data-lucide={editingUserId ? "user-cog" : "user-plus"} style={{ color: 'var(--success)' }}></i>
-            {editingUserId ? "Modify User" : "Provision User"}
+            <i data-lucide={editingUserId ? "user-cog" : "user-plus"} style={{ color: editingUserId ? '#f59e0b' : 'var(--success)' }}></i>
+            {editingUserId ? `Edit User: ${userForm.fullName}` : "Provision User"}
           </h3>
           <form onSubmit={onUserSubmit} className="form">
             <input placeholder="Full Name" value={userForm.fullName} onChange={(e) => setUserForm((s) => ({ ...s, fullName: e.target.value }))} required />
@@ -461,6 +497,54 @@ export default function App() {
           </form>
         </div>
       </section>
+      
+      {editingDispatchId && (
+        <div className="card" style={{ marginTop: '32px', border: '1px solid #f59e0b22', background: 'rgba(245, 158, 11, 0.03)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ margin: 0 }}>
+              <i data-lucide="truck" style={{ color: '#f59e0b' }}></i>
+              Modify Transit Record: <code style={{ color: '#f59e0b' }}>#{dispatchForm.trackingId}</code>
+            </h3>
+            <button className="secondary" onClick={() => setEditingDispatchId("")} style={{ padding: '8px 16px' }}>Cancel Edit</button>
+          </div>
+          <form onSubmit={onDispatchSubmit} className="form" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            <div>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>Category</label>
+              <input placeholder="Category" value={dispatchForm.category} onChange={(e) => setDispatchForm((s) => ({ ...s, category: e.target.value }))} required />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>Courier / Porter</label>
+              <input placeholder="Courier Name" value={dispatchForm.courierName} onChange={(e) => setDispatchForm((s) => ({ ...s, courierName: e.target.value }))} required />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>Destination Branch</label>
+              <select value={dispatchForm.toBranchId} onChange={(e) => setDispatchForm((s) => ({ ...s, toBranchId: e.target.value }))} required>
+                {branchOptions.map((b) => (
+                  <option key={b._id} value={b._id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>Override Status</label>
+              <select value={dispatchForm.status} onChange={(e) => setDispatchForm((s) => ({ ...s, status: e.target.value }))} style={{ border: '1px solid #f59e0b44' }}>
+                <option value="SENT">SENT (Initial State)</option>
+                <option value="IN_TRANSIT">IN_TRANSIT (Dispatched)</option>
+                <option value="WAITING_RECEIPT">WAITING_RECEIPT (Arrived at Dest)</option>
+                <option value="RECEIVED">RECEIVED (Completed)</option>
+                <option value="PENDING">PENDING (Delayed)</option>
+                <option value="OVERDUE">OVERDUE (System Flagged)</option>
+                <option value="FAILED">FAILED (Rejected/Lost)</option>
+              </select>
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <button type="submit" style={{ width: '100%', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'black', fontWeight: 'bold' }}>
+                <i data-lucide="save"></i> Update Transit History Record
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
 
       <section className="card table-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '20px' }}>
@@ -612,7 +696,10 @@ export default function App() {
                     </span>
                   </td>
                   <td>{new Date(d.dispatchDate).toLocaleDateString()}</td>
-                  <td>
+                  <td style={{ display: 'flex', gap: '8px' }}>
+                    <button className="secondary" onClick={() => startEditDispatch(d)} title="Edit Shipment">
+                      <i data-lucide="edit-2" style={{ width: '16px' }}></i>
+                    </button>
                     <button className="danger" onClick={() => onDeleteDispatch(d._id)} title="Delete Record">
                       <i data-lucide="trash-2" style={{ width: '16px' }}></i>
                     </button>

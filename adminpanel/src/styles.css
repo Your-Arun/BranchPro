@@ -334,3 +334,26 @@ tr:last-child td { border-bottom: none; }
   .grid { grid-template-columns: 1fr; }
   .topbar { flex-direction: column; gap: 20px; align-items: flex-start; }
 }
+
+.edit-mode-active {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.15) !important;
+  background: rgba(245, 158, 11, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.edit-mode-active::before {
+  content: "EDITING";
+  position: absolute;
+  top: 12px;
+  right: -30px;
+  background: #f59e0b;
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 40px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  z-index: 10;
+}
