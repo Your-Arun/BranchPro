@@ -1,7 +1,7 @@
 import { Branch } from "../models/Branch.js";
 import { Dispatch } from "../models/Dispatch.js";
 import { User } from "../models/User.js";
-import { sendDispatchEmail } from "../utils/mailer.js";
+import { sendDispatchEmail, sendStatusUpdateEmail } from "../utils/mailer.js";
 
 const statusMap = {
   ALL: null,
@@ -308,6 +308,37 @@ export const updateDispatchStatus = async (req, res, next) => {
 
     if (!updated) {
       return res.status(404).json({ message: "Dispatch not found or unauthorized" });
+    }
+
+    // Send email notification to both branches on status change
+    try {
+      const fromBranchId = updated.fromBranchId?._id || doc.fromBranchId;
+      const toBranchId = updated.toBranchId?._id || doc.toBranchId;
+
+      const [fromStaff, toStaff] = await Promise.all([
+        User.find({ branchId: fromBranchId }).select("email").lean(),
+        User.find({ branchId: toBranchId }).select("email").lean()
+      ]);
+
+      const allEmails = Array.from(new Set([
+        ...fromStaff.map(u => u.email),
+        ...toStaff.map(u => u.email)
+      ])).filter(Boolean);
+
+      console.log(`[Status Update Email] Status: ${status}, Recipients: ${allEmails.join(', ')}`);
+
+      if (allEmails.length > 0) {
+        sendStatusUpdateEmail(
+          allEmails,
+          updated,
+          updated.fromBranchId?.name || 'Unknown',
+          updated.toBranchId?.name || 'Unknown',
+          status,
+          req.user?.fullName
+        ).catch(err => console.error('[Status Update Email] Error:', err.message));
+      }
+    } catch (emailErr) {
+      console.error('[Status Update Email] Trigger Error:', emailErr.message);
     }
 
     res.json(toDto(updated));
