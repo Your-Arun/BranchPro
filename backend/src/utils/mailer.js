@@ -1,27 +1,32 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-// Uses HTTP API instead of SMTP — works on Render free tier
-const getResend = () => {
-  if (!process.env.RESEND_API_KEY) {
+// Create Gmail transporter
+const createTransporter = () => {
+  if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
     return null;
   }
-  return new Resend(process.env.RESEND_API_KEY);
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASSWORD
+    }
+  });
 };
-
-const FROM_EMAIL = 'BranchFlow <onboarding@resend.dev>'; // Free tier uses resend.dev domain
 
 // ─── Dispatch Created Notification ───────────────────────────────────
 export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, toBranchName) => {
-  const resend = getResend();
-  if (!resend) {
-    console.log(`[Email Skipped] Missing RESEND_API_KEY in .env`);
-    console.log(`Would have sent to: ${emails.join(', ')}`);
+  const transporter = createTransporter();
+  if (!transporter) {
+    console.log(`[Email Skipped] Missing SMTP_EMAIL or SMTP_PASSWORD in .env`);
     return;
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+    const info = await transporter.sendMail({
+      from: `"BranchFlow Alerts" <${process.env.SMTP_EMAIL}>`,
       to: emails,
       subject: `🚚 New Dispatch Incoming: #${dispatchData.trackingId}`,
       html: `
@@ -45,11 +50,7 @@ export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, to
       `
     });
 
-    if (error) {
-      console.error('[Dispatch Email] ❌ Resend Error:', error);
-    } else {
-      console.log(`[Dispatch Email] ✅ Sent to ${emails.join(', ')} | ID: ${data?.id}`);
-    }
+    console.log(`[Dispatch Email] ✅ Sent to ${emails.join(', ')} | MessageId: ${info.messageId}`);
   } catch (error) {
     console.error('[Dispatch Email] ❌ Failed:', error.message);
   }
@@ -57,9 +58,9 @@ export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, to
 
 // ─── Status Update Notification ──────────────────────────────────────
 export const sendStatusUpdateEmail = async (emails, dispatchData, fromBranchName, toBranchName, newStatus, updatedBy) => {
-  const resend = getResend();
-  if (!resend) {
-    console.log(`[Status Email Skipped] Missing RESEND_API_KEY`);
+  const transporter = createTransporter();
+  if (!transporter) {
+    console.log(`[Status Email Skipped] Missing SMTP credentials`);
     return;
   }
 
@@ -76,8 +77,8 @@ export const sendStatusUpdateEmail = async (emails, dispatchData, fromBranchName
   const cfg = statusConfig[newStatus] || { color: '#4e8dff', emoji: '📦', msg: `status updated to ${newStatus}` };
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+    const info = await transporter.sendMail({
+      from: `"BranchFlow Alerts" <${process.env.SMTP_EMAIL}>`,
       to: emails,
       subject: `${cfg.emoji} Shipment #${dispatchData.trackingId} — ${newStatus}`,
       html: `
@@ -102,11 +103,7 @@ export const sendStatusUpdateEmail = async (emails, dispatchData, fromBranchName
       `
     });
 
-    if (error) {
-      console.error('[Status Email] ❌ Resend Error:', error);
-    } else {
-      console.log(`[Status Email] ✅ Sent to ${emails.join(', ')} for #${dispatchData.trackingId} → ${newStatus} | ID: ${data?.id}`);
-    }
+    console.log(`[Status Email] ✅ Sent to ${emails.join(', ')} for #${dispatchData.trackingId} → ${newStatus} | MessageId: ${info.messageId}`);
   } catch (error) {
     console.error('[Status Email] ❌ Failed:', error.message);
   }
