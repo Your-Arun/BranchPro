@@ -5,7 +5,7 @@ import axios from 'axios';
 import { Package } from 'lucide-react';
 
 const Signup = () => {
-  const { signup } = useAuth();
+  const { signup, toast } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ fullName: '', email: '', password: '', registrationKey: '' });
   const [error, setError] = useState('');
@@ -17,9 +17,10 @@ const Signup = () => {
     setLoading(true);
     try {
       await signup(form);
+      toast("Account created successfully!", "success");
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Signup failed');
+      toast(err.response?.data?.message || err.message || 'Signup failed', "error");
     } finally {
       setLoading(false);
     }
@@ -31,7 +32,6 @@ const Signup = () => {
         <h2 className="title" style={{ textAlign: 'center' }}>Create Account</h2>
         <p className="subtitle" style={{ textAlign: 'center', marginBottom: '24px' }}>Join your branch portal</p>
         
-        {error && <div style={{ backgroundColor: 'var(--danger)', color: '#fff', padding: '12px', borderRadius: '8px', marginBottom: '16px', textAlign: 'center' }}>{error}</div>}
         
         <form onSubmit={handleSubmit}>
           <input className="input-field" type="text" placeholder="Full Name" value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} required />

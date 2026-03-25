@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Package } from 'lucide-react';
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, toast } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,9 +17,10 @@ const Login = () => {
     setLoading(true);
     try {
       await login(email, password);
+      toast("Welcome back!", "success");
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Login failed');
+      toast(err.message || 'Login failed', "error");
     } finally {
       setLoading(false);
     }
@@ -36,7 +37,6 @@ const Login = () => {
         <h2 className="title" style={{ textAlign: 'center' }}>Welcome Back</h2>
         <p className="subtitle" style={{ textAlign: 'center', marginBottom: '32px' }}>Login to Staff Portal</p>
         
-        {error && <div style={{ backgroundColor: 'var(--danger)', color: '#fff', padding: '12px', borderRadius: '8px', marginBottom: '16px', textAlign: 'center' }}>{error}</div>}
         
         <form onSubmit={handleSubmit}>
           <input className="input-field" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />

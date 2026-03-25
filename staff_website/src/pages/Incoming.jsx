@@ -4,7 +4,7 @@ import { Download, Send, AlertCircle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Incoming = () => {
-  const { dispatches, user, updateStatus } = useAuth();
+  const { dispatches, user, updateStatus, toast, confirm } = useAuth();
   const [tab, setTab] = useState('ALL'); // ALL, SENT, PENDING, RECEIVED
   const navigate = useNavigate();
 
@@ -74,7 +74,12 @@ const Incoming = () => {
                 <button 
                   className="btn-primary" 
                   style={{ width: 'auto', padding: '10px 24px', backgroundColor: 'var(--success)', zIndex: 2 }}
-                  onClick={(e) => { e.stopPropagation(); updateStatus(item._id, "RECEIVED").catch(alert); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    updateStatus(item._id, "RECEIVED").catch(err => {
+                      toast(err.response?.data?.message || err.message || "Failed to confirm", "error");
+                    });
+                  }}
                 >
                   <CheckCircle size={18} /> Confirm Receipt
                 </button>
@@ -85,9 +90,14 @@ const Incoming = () => {
                   style={{ backgroundColor: 'transparent', color: 'var(--danger)', padding: '10px 24px', borderRadius: '12px', border: '1px solid var(--danger)', cursor: 'pointer', fontWeight: 'bold', zIndex: 2 }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm("Are you sure you want to withdraw this shipment?")) {
-                      updateStatus(item._id, "FAILED").catch(alert);
-                    }
+                    confirm("Withdraw Shipment", "Are you sure you want to withdraw this shipment?", async () => {
+                      try {
+                        await updateStatus(item._id, "FAILED");
+                        toast("Shipment withdrawn successfully", "success");
+                      } catch (err) {
+                        toast(err.response?.data?.message || err.message || "Failed to withdraw", "error");
+                      }
+                    });
                   }}
                 >
                   Withdraw

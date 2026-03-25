@@ -4,7 +4,7 @@ import { LayoutDashboard, Download, Send, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Layout = ({ children }) => {
-  const { user, dispatches } = useAuth();
+  const { user, dispatches, toasts, setToasts, confirmData, handleConfirm, handleCancel } = useAuth();
   
   const unconfirmedCount = React.useMemo(() => {
     if (!user || user.role === "ADMIN") return 0;
@@ -52,6 +52,82 @@ const Layout = ({ children }) => {
         <div className="page-content">
           {children}
         </div>
+
+        {/* Toasts */}
+        <div style={{ position: 'fixed', top: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 9999 }}>
+          {toasts.map(t => (
+            <div 
+              key={t.id} 
+              style={{ 
+                backgroundColor: t.type === 'error' ? 'var(--danger)' : 'var(--success)', 
+                color: '#fff', 
+                padding: '12px 16px', 
+                borderRadius: '12px', 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                minWidth: '240px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
+              <span>{t.message}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Confirmation Modal */}
+        {confirmData && (
+          <div style={{ 
+            position: 'fixed', 
+            top: 0, left: 0, right: 0, bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.5)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 10000 
+          }}>
+            <div style={{ 
+              backgroundColor: 'var(--card)', 
+              padding: '24px', 
+              borderRadius: '12px', 
+              maxWidth: '400px', 
+              width: '90%', 
+              boxShadow: '0 8px 24px rgba(0,0,0,0.2)' 
+            }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: 'bold' }}>{confirmData.title}</h3>
+              <p style={{ margin: '0 0 20px 0', color: 'var(--muted)' }}>{confirmData.message}</p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button 
+                  onClick={handleCancel}
+                  style={{ 
+                    padding: '8px 16px', 
+                    borderRadius: '8px', 
+                    border: '1px solid var(--border)', 
+                    backgroundColor: 'transparent', 
+                    color: 'var(--text)', 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleConfirm}
+                  style={{ 
+                    padding: '8px 16px', 
+                    borderRadius: '8px', 
+                    backgroundColor: 'var(--danger)', 
+                    color: '#fff', 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    fontWeight: 'bold' 
+                  }}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

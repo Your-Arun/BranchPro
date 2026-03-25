@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Dispatch = () => {
-  const { createDispatch, branches, user } = useAuth();
+  const { createDispatch, branches, user, toast } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -36,9 +36,10 @@ const Dispatch = () => {
 
     try {
       await createDispatch(payload);
+      toast("Dispatch created successfully", "success");
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Failed to create dispatch");
+      toast(err.response?.data?.message || err.message || "Failed to create dispatch", "error");
     } finally {
       setLoading(false);
     }
@@ -50,14 +51,27 @@ const Dispatch = () => {
       <p className="subtitle" style={{ marginBottom: '32px' }}>Send a new package to a branch</p>
 
       <div className="card" style={{ maxWidth: '600px' }}>
-        {error && <div style={{ backgroundColor: 'var(--danger)', color: '#fff', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>{error}</div>}
         
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Destination Branch *</label>
-            <select className="input-field" value={form.toBranchId} onChange={e => setForm({...form, toBranchId: e.target.value})} required>
-              <option value="">Select Branch...</option>
+            <select 
+              className="input-field" 
+              value={form.toBranchId} 
+              onChange={e => setForm({...form, toBranchId: e.target.value})} 
+              required
+              style={{ 
+                backgroundColor: 'var(--bg)', 
+                border: '1px solid var(--border)', 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: '16px',
+                color: 'var(--text)',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="" disabled>Select Branch...</option>
               {destBranches.map(b => (
                 <option key={b._id} value={b._id}>{b.name} ({b.code})</option>
               ))}
@@ -66,8 +80,22 @@ const Dispatch = () => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Category *</label>
-            <select className="input-field" value={form.category} onChange={e => setForm({...form, category: e.target.value})} required>
-              <option value="">Select Category...</option>
+            <select 
+              className="input-field" 
+              value={form.category} 
+              onChange={e => setForm({...form, category: e.target.value})} 
+              required
+              style={{ 
+                backgroundColor: 'var(--bg)', 
+                border: '1px solid var(--border)', 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: '16px',
+                color: 'var(--text)',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="" disabled>Select Category...</option>
               <option value="Doc">Document</option>
               <option value="Non-Doc">Non-Document</option>
               <option value="Cheque">Cheque</option>
@@ -76,17 +104,60 @@ const Dispatch = () => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Courier Service *</label>
-            <input className="input-field" type="text" placeholder="e.g. BlueDart, DTDC" value={form.courierName} onChange={e => setForm({...form, courierName: e.target.value})} required />
+            <input 
+              className="input-field" 
+              type="text" 
+              placeholder="e.g. BlueDart, DTDC" 
+              value={form.courierName} 
+              onChange={e => setForm({...form, courierName: e.target.value})} 
+              required 
+              style={{ 
+                backgroundColor: 'var(--bg)', 
+                border: '1px solid var(--border)', 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: '16px',
+                color: 'var(--text)'
+              }}
+            />
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Docket / Tracking Number</label>
-            <input className="input-field" type="text" placeholder="Optional" value={form.docketNumber} onChange={e => setForm({...form, docketNumber: e.target.value})} />
+            <input 
+              className="input-field" 
+              type="text" 
+              placeholder="Optional" 
+              value={form.docketNumber} 
+              onChange={e => setForm({...form, docketNumber: e.target.value})} 
+              style={{ 
+                backgroundColor: 'var(--bg)', 
+                border: '1px solid var(--border)', 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: '16px',
+                color: 'var(--text)'
+              }}
+            />
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Description / Notes</label>
-            <textarea className="input-field" rows="4" placeholder="Optional" value={form.description} onChange={e => setForm({...form, description: e.target.value})}></textarea>
+            <textarea 
+              className="input-field" 
+              rows="4" 
+              placeholder="Optional" 
+              value={form.description} 
+              onChange={e => setForm({...form, description: e.target.value})} 
+              style={{ 
+                backgroundColor: 'var(--bg)', 
+                border: '1px solid var(--border)', 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: '16px',
+                color: 'var(--text)'
+              }}
+            ></textarea>
           </div>
 
           <button className="btn-primary" type="submit" disabled={loading} style={{ marginTop: '16px' }}>

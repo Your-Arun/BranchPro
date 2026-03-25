@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
-  const { user, logout, dispatches, updateProfile } = useAuth();
+  const { user, logout, dispatches, updateProfile, toast } = useAuth();
   const [exporting, setExporting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -24,10 +24,10 @@ const Profile = () => {
       const payload = { ...formData };
       if (!payload.password) delete payload.password;
       await updateProfile(payload);
-      setSuccess("Profile updated successfully!");
+      toast("Profile updated successfully!", "success");
       setEditing(false);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Failed to update profile");
+      toast(err.response?.data?.message || err.message || "Failed to update profile", "error");
     } finally {
       setSaving(false);
     }
@@ -78,8 +78,6 @@ const Profile = () => {
       <h1 className="title">Profile</h1>
       <p className="subtitle" style={{ marginBottom: '32px' }}>Manage your account settings and data</p>
 
-      {error && <div className="card" style={{ marginBottom: '20px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid var(--danger)' }}>{error}</div>}
-      {success && <div className="card" style={{ marginBottom: '20px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', border: '1px solid var(--success)' }}>{success}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 400px) 1fr', gap: '32px' }}>
         {/* Sidebar Card */}

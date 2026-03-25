@@ -12,7 +12,7 @@ const timeAgo = (dateStr) => {
 };
 
 const Dashboard = () => {
-  const { dashboard, dispatches, user, updateStatus } = useAuth();
+  const { dashboard, dispatches, user, updateStatus, toast } = useAuth();
   const navigate = useNavigate();
 
   const metrics = dashboard?.metrics;
@@ -54,7 +54,12 @@ const Dashboard = () => {
                 </div>
                 <button 
                   style={{ backgroundColor: 'var(--warning)', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', zIndex: 2 }}
-                  onClick={(e) => { e.stopPropagation(); updateStatus(item._id, "RECEIVED").catch(alert); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    updateStatus(item._id, "RECEIVED").catch(err => {
+                      toast(err.response?.data?.message || err.message || "Failed to confirm", "error");
+                    });
+                  }}
                 >
                   Confirm Receipt
                 </button>

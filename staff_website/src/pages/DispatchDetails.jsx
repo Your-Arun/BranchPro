@@ -19,7 +19,7 @@ const getStatusColor = (status) => {
 
 const DispatchDetails = () => {
   const { id } = useParams();
-  const { api, updateStatus, user } = useAuth();
+  const { api, updateStatus, user, toast, confirm } = useAuth();
   const navigate = useNavigate();
   
   const [dispatchData, setDispatchData] = useState(null);
@@ -49,14 +49,15 @@ const DispatchDetails = () => {
   const needsConfirm = isIncoming && dispatchData.status !== 'RECEIVED' && dispatchData.status !== 'FAILED';
 
   const handleConfirm = async () => {
-    if (window.confirm("Confirm receipt of this package?")) {
+    confirm("Confirm Receipt", "Confirm receipt of this package?", async () => {
       try {
         const updated = await updateStatus(id, "RECEIVED");
         setDispatchData(updated);
+        toast("Package marked as received", "success");
       } catch (err) {
-        alert("Action failed");
+        toast(err.response?.data?.message || err.message || "Action failed", "error");
       }
-    }
+    });
   };
 
   return (

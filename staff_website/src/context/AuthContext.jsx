@@ -19,6 +19,35 @@ export const AuthProvider = ({ children }) => {
   const [dispatches, setDispatches] = useState([]);
   const [branches, setBranches] = useState([]);
   const [error, setError] = useState("");
+  const [toasts, setToasts] = useState([]);
+  const [confirmData, setConfirmData] = useState(null);
+
+  const toast = useCallback((message, type = "success") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  }, []);
+
+  const confirm = useCallback((title, message, onConfirm) => {
+    setConfirmData({ title, message, onConfirm });
+  }, []);
+
+  const handleConfirm = useCallback(async () => {
+    if (confirmData?.onConfirm) {
+      try {
+        await confirmData.onConfirm();
+      } catch (err) {
+        console.error("Confirmation action failed:", err);
+      }
+    }
+    setConfirmData(null);
+  }, [confirmData]);
+
+  const handleCancel = useCallback(() => {
+    setConfirmData(null);
+  }, []);
 
   const authRef = useRef(user);
   useEffect(() => {
@@ -91,7 +120,8 @@ export const AuthProvider = ({ children }) => {
   const updateStatus = async (id, status) => {
     const { data } = await api.patch(`/dispatches/${id}/status`, { status });
     setDispatches((prev) => prev.map((d) => (d._id === id ? data : d)));
-    await loadAll();
+    // Don't wait for loadAll to complete, just trigger it
+    loadAll();
     return data;
   };
 
@@ -104,7 +134,8 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      user, login, signup, logout, loading, error, dashboard, dispatches, branches, refresh: loadAll, createDispatch, updateStatus, updateProfile, api
+      user, login, signup, logout, loading, error, dashboard, dispatches, branches, refresh: loadAll, createDispatch, updateStatus, updateProfile, api,
+      toasts, confirmData, toast, confirm, setToasts, setConfirmData, handleConfirm, handleCancel
     }}>
       {children}
     </AuthContext.Provider>
