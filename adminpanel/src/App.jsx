@@ -47,6 +47,7 @@ export default function App() {
   const [selectedDispatches, setSelectedDispatches] = useState([]);
   const [toasts, setToasts] = useState([]);
   const [confirmData, setConfirmData] = useState(null);
+  const [viewingDispatch, setViewingDispatch] = useState(null);
 
   const toast = (message, type = "success") => {
     const id = Date.now();
@@ -859,6 +860,9 @@ export default function App() {
                   </td>
                   <td>{new Date(d.dispatchDate).toLocaleDateString()}</td>
                   <td style={{ display: 'flex', gap: '8px' }}>
+                    <button className="secondary" onClick={() => setViewingDispatch(d)} title="View Detail">
+                      <i data-lucide="eye" style={{ width: '16px' }}></i>
+                    </button>
                     <button className="secondary" onClick={() => startEditDispatch(d)} title="Edit Shipment">
                       <i data-lucide="edit-2" style={{ width: '16px' }}></i>
                     </button>
@@ -893,6 +897,75 @@ export default function App() {
               <button className="danger" onClick={() => { confirmData.onConfirm(); setConfirmData(null); }}>
                 Proceed Deletion
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewingDispatch && (
+        <div className="modal-overlay" onClick={() => setViewingDispatch(null)}>
+          <div className="modal parcel-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '650px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '20px', marginBottom: '24px' }}>
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Tracking Identity</span>
+                <h2 style={{ margin: '4px 0', color: '#f59e0b' }}>#{viewingDispatch.trackingId}</h2>
+              </div>
+              <button className="secondary" onClick={() => setViewingDispatch(null)} style={{ padding: '8px', minWidth: 'auto', borderRadius: '12px' }}>
+                <i data-lucide="x" style={{ width: '20px' }}></i>
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+              <div>
+                <label className="view-label">Category</label>
+                <div className="view-value">{viewingDispatch.category}</div>
+              </div>
+              <div>
+                <label className="view-label">Courier / Porter</label>
+                <div className="view-value">{viewingDispatch.courierName}</div>
+              </div>
+              <div>
+                <label className="view-label">Current Status</label>
+                <div className={`view-value status-${viewingDispatch.status.toLowerCase()}`}>{viewingDispatch.status}</div>
+              </div>
+              <div>
+                <label className="view-label">Dispatch Timestamp</label>
+                <div className="view-value">{new Date(viewingDispatch.dispatchDate).toLocaleString()}</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: '20px', border: '1px solid var(--card-border)' }}>
+              <div style={{ display: 'flex', gap: '24px', position: 'relative' }}>
+                <div style={{ flex: 1 }}>
+                  <label className="view-label">Source Origin</label>
+                  <div className="view-value" style={{ fontSize: '1.1rem' }}>{viewingDispatch.fromBranch}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <i data-lucide="arrow-right" style={{ color: 'var(--primary)' }}></i>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="view-label">Destination</label>
+                  <div className="view-value" style={{ fontSize: '1.1rem' }}>{viewingDispatch.toBranch}</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '32px' }}>
+              <label className="view-label" style={{ marginBottom: '16px', display: 'block' }}>Ecosystem Transit Timeline</label>
+              <div className="timeline-container">
+                {(viewingDispatch.timeline || []).map((step, i) => (
+                  <div key={i} className="timeline-step">
+                    <div className={`timeline-dot ${step.status.toLowerCase()}`}></div>
+                    <div className="timeline-content">
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 600 }}>{step.step}</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{step.date ? new Date(step.date).toLocaleDateString() : ''}</span>
+                      </div>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{step.note}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

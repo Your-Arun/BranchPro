@@ -493,3 +493,67 @@ input[type="checkbox"]:checked {
   from { opacity: 0; transform: scale(0.9) translateY(20px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
+
+/* View Modal Details */
+.view-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.view-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.view-value.status-received { color: var(--success); }
+.view-value.status-sent, .view-value.status-in_transit { color: var(--warning); }
+.view-value.status-failed { color: var(--danger); }
+
+/* Timeline UI */
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  margin-left: 10px;
+}
+
+.timeline-container::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 10px;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255,255,255,0.05);
+}
+
+.timeline-step {
+  display: flex;
+  gap: 20px;
+  position: relative;
+}
+
+.timeline-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  margin-top: 6px;
+  z-index: 1;
+  box-shadow: 0 0 0 4px var(--bg-dark);
+}
+
+.timeline-dot.completed { background: var(--success); box-shadow: 0 0 10px var(--success), 0 0 0 4px var(--bg-dark); }
+.timeline-dot.in_progress { background: var(--warning); box-shadow: 0 0 10px var(--warning), 0 0 0 4px var(--bg-dark); }
+
+.timeline-content {
+  flex: 1;
+  padding-bottom: 10px;
+}
