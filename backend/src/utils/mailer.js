@@ -12,7 +12,10 @@ const createTransporter = async () => {
     auth: {
       user: process.env.SMTP_EMAIL,
       pass: process.env.SMTP_PASSWORD
-    }
+    },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 5000,    // 5 seconds
+    socketTimeout: 10000      // 10 seconds
   });
 
   // ✅ Verify connection (debug ke liye)
