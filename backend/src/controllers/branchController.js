@@ -127,3 +127,32 @@ export const deleteBranch = async (req, res, next) => {
     next(error);
   }
 };
+
+export const bulkDeleteBranches = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ message: "ids array is required" });
+    }
+
+    const branches = await Branch.find({ _id: { $in: ids }, companyId: req.user.companyId });
+    const foundIds = branches.map(b => String(b._id));
+
+    // Check if any branches are in use
+    const inUse = await Dispatch.countDocuments({
+      $or: [
+        { fromBranchId: { $in: foundIds } },
+        { toBranchId: { $in: foundIds } }
+      ]
+    });
+
+    if (inUse > 0) {
+      return res.status(400).json({ message: "One or more branches have dispatch history and cannot be deleted" });
+    }
+
+    await Branch.deleteMany({ _id: { $in: foundIds } });
+    res.json({ message: `${foundIds.length} branches deleted` });
+  } catch (error) {
+    next(error);
+  }
+};

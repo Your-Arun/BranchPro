@@ -42,6 +42,23 @@ export default function App() {
   const [editingUserId, setEditingUserId] = useState("");
   const [dispatchForm, setDispatchForm] = useState({ trackingId: "", toBranchId: "", category: "", courierName: "", status: "SENT", priority: "MEDIUM" });
   const [editingDispatchId, setEditingDispatchId] = useState("");
+  const [selectedBranches, setSelectedBranches] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedDispatches, setSelectedDispatches] = useState([]);
+  const [toasts, setToasts] = useState([]);
+  const [confirmData, setConfirmData] = useState(null);
+
+  const toast = (message, type = "success") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  };
+
+  const confirm = (title, message, onConfirm) => {
+    setConfirmData({ title, message, onConfirm });
+  };
 
   const isLoggedIn = Boolean(token && profile?.role === "ADMIN");
   const [isFetchingData, setIsFetchingData] = useState(isLoggedIn); // Start true if already logged in
@@ -139,6 +156,7 @@ export default function App() {
       setLoading(true);
       const data = await request("/admin/company", { method: "POST", token, body: companyForm });
       setCompany(data);
+      toast("Infrastructure initialized successfully!");
       await loadAdminData();
     } catch (e2) {
       setError(e2.message);
@@ -156,9 +174,10 @@ export default function App() {
       } else {
         await request("/admin/branches", { method: "POST", token, body: branchForm });
       }
+      await loadAdminData();
+      toast(editingBranchId ? "Branch synchronized" : "Branch established successfully");
       setBranchForm({ name: "", city: "", address: "", code: "", status: "ACTIVE" });
       setEditingBranchId("");
-      await loadAdminData();
     } catch (e2) {
       setError(e2.message);
     }
@@ -177,14 +196,34 @@ export default function App() {
   };
 
   const onDeleteBranch = async (id) => {
-    if (!window.confirm("Delete this branch?")) return;
-    try {
-      setError("");
-      await request(`/admin/branches/${id}`, { method: "DELETE", token });
-      await loadAdminData();
-    } catch (e2) {
-      setError(e2.message);
-    }
+    confirm("Delete Branch", "Are you sure you want to decommission this branch? This action cannot be reversed.", async () => {
+      try {
+        setError("");
+        await request(`/admin/branches/${id}`, { method: "DELETE", token });
+        setBranches((prev) => prev.filter((b) => b._id !== id));
+        setSelectedBranches((prev) => prev.filter((bid) => bid !== id));
+        toast("Branch decommissioned", "error");
+      } catch (e2) {
+        setError(e2.message);
+      }
+    });
+  };
+
+  const onBulkDeleteBranches = async () => {
+    confirm("Bulk Delete Branches", `Are you sure you want to remove ${selectedBranches.length} selected branches?`, async () => {
+      try {
+        setError("");
+        setLoading(true);
+        await request("/admin/branches/bulk", { method: "DELETE", token, body: { ids: selectedBranches } });
+        setBranches((prev) => prev.filter((b) => !selectedBranches.includes(b._id)));
+        setSelectedBranches([]);
+        toast(`${selectedBranches.length} branches removed`, "error");
+      } catch (e2) {
+        setError(e2.message);
+      } finally {
+        setLoading(false);
+      }
+    });
   };
 
   const onUserSubmit = async (e) => {
@@ -199,6 +238,7 @@ export default function App() {
       setUserForm({ fullName: "", email: "", password: "", role: "STAFF", branchId: branches[0]?._id || "" });
       setEditingUserId("");
       await loadAdminData();
+      toast(editingUserId ? "User profile updated" : "User provisioned successfully");
     } catch (e2) {
       setError(e2.message);
     }
@@ -219,18 +259,38 @@ export default function App() {
   };
 
   const onDeleteUser = async (id) => {
-    if (!window.confirm("Delete this user?")) return;
-    try {
-      setError("");
-      await request(`/admin/users/${id}`, { method: "DELETE", token });
-      await loadAdminData();
-    } catch (e2) {
-      setError(e2.message);
-    }
+    confirm("Remove User", "Are you sure you want to remove this user from the system?", async () => {
+      try {
+        setError("");
+        await request(`/admin/users/${id}`, { method: "DELETE", token });
+        setUsers((prev) => prev.filter((u) => u._id !== id));
+        setSelectedUsers((prev) => prev.filter((uid) => uid !== id));
+        toast("User personnel removed", "error");
+      } catch (e2) {
+        setError(e2.message);
+      }
+    });
+  };
+
+  const onBulkDeleteUsers = async () => {
+    confirm("Bulk Remove Users", `Are you sure you want to remove ${selectedUsers.length} selected users?`, async () => {
+      try {
+        setError("");
+        setLoading(true);
+        await request("/admin/users/bulk", { method: "DELETE", token, body: { ids: selectedUsers } });
+        setUsers((prev) => prev.filter((u) => !selectedUsers.includes(u._id)));
+        setSelectedUsers([]);
+        toast(`${selectedUsers.length} users removed`, "error");
+      } catch (e2) {
+        setError(e2.message);
+      } finally {
+        setLoading(false);
+      }
+    });
   };
 
   const downloadCSV = (data, filename, columns) => {
-    if (!data || data.length === 0) return alert("No data to export");
+    if (!data || data.length === 0) return toast("No metrics to export", "error");
     const headers = columns.map(col => col.label).join(",");
     const rows = data.map(item => 
       columns.map(col => {
@@ -249,14 +309,34 @@ export default function App() {
   };
 
   const onDeleteDispatch = async (id) => {
-    if (!window.confirm("Delete this dispatch?")) return;
-    try {
-      setError("");
-      await request(`/admin/dispatches/${id}`, { method: "DELETE", token });
-      await loadAdminData();
-    } catch (e2) {
-      setError(e2.message);
-    }
+    confirm("Clear Transit Record", "Are you sure you want to remove this shipment from history?", async () => {
+      try {
+        setError("");
+        await request(`/admin/dispatches/${id}`, { method: "DELETE", token });
+        setDispatches((prev) => prev.filter((d) => d._id !== id));
+        setSelectedDispatches((prev) => prev.filter((did) => did !== id));
+        toast("Transit history record cleared", "error");
+      } catch (e2) {
+        setError(e2.message);
+      }
+    });
+  };
+  
+  const onBulkDeleteDispatches = async () => {
+    confirm("Bulk Clear History", `Are you sure you want to clear ${selectedDispatches.length} transit history records?`, async () => {
+      try {
+        setError("");
+        setLoading(true);
+        await request("/admin/dispatches/bulk", { method: "DELETE", token, body: { ids: selectedDispatches } });
+        setDispatches((prev) => prev.filter((d) => !selectedDispatches.includes(d._id)));
+        setSelectedDispatches([]);
+        toast(`${selectedDispatches.length} transit records cleared`, "error");
+      } catch (e2) {
+        setError(e2.message);
+      } finally {
+        setLoading(false);
+      }
+    });
   };
   
   const onDispatchSubmit = async (e) => {
@@ -268,6 +348,7 @@ export default function App() {
       setEditingDispatchId("");
       setDispatchForm({ trackingId: "", toBranchId: "", category: "", courierName: "", status: "SENT", priority: "MEDIUM" });
       await loadAdminData();
+      toast("Transit history record synchronized");
     } catch (e2) {
       setError(e2.message);
     } finally {
@@ -548,7 +629,14 @@ export default function App() {
 
       <section className="card table-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '20px' }}>
-          <h3><i data-lucide="list" style={{ color: 'var(--primary)' }}></i> Branch Registry</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <h3><i data-lucide="list" style={{ color: 'var(--primary)' }}></i> Branch Registry</h3>
+            {selectedBranches.length > 0 && (
+              <button className="danger" style={{ padding: '6px 12px', fontSize: '0.75rem', borderRadius: '8px' }} onClick={onBulkDeleteBranches}>
+                <i data-lucide="trash-2" style={{ width: '14px' }}></i> Delete ({selectedBranches.length})
+              </button>
+            )}
+          </div>
           <button className="secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => downloadCSV(branches, "Branches", [
             { label: "Name", key: "name" },
             { label: "Code", key: "code" },
@@ -563,6 +651,16 @@ export default function App() {
           <table>
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={branches.length > 0 && selectedBranches.length === branches.length} 
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedBranches(branches.map(b => b._id));
+                      else setSelectedBranches([]);
+                    }}
+                  />
+                </th>
                 <th>Branch Identity</th>
                 <th>System Code</th>
                 <th>Join Token (Secure)</th>
@@ -573,7 +671,17 @@ export default function App() {
             </thead>
             <tbody>
               {branches.map((b) => (
-                <tr key={b._id}>
+                <tr key={b._id} className={selectedBranches.includes(b._id) ? 'selected' : ''}>
+                  <td>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedBranches.includes(b._id)} 
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedBranches(prev => [...prev, b._id]);
+                        else setSelectedBranches(prev => prev.filter(id => id !== b._id));
+                      }}
+                    />
+                  </td>
                   <td style={{ fontWeight: '600' }}>{b.name}</td>
                   <td><code style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '6px' }}>{b.code}</code></td>
                   <td>
@@ -601,7 +709,14 @@ export default function App() {
 
       <section className="card table-card" style={{ marginTop: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '20px' }}>
-          <h3><i data-lucide="users-round" style={{ color: '#10b981' }}></i> User Personnel</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <h3><i data-lucide="users-round" style={{ color: '#10b981' }}></i> User Personnel</h3>
+            {selectedUsers.length > 0 && (
+              <button className="danger" style={{ padding: '6px 12px', fontSize: '0.75rem', borderRadius: '8px' }} onClick={onBulkDeleteUsers}>
+                <i data-lucide="trash-2" style={{ width: '14px' }}></i> Delete ({selectedUsers.length})
+              </button>
+            )}
+          </div>
           <button className="secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => downloadCSV(users, "Users", [
             { label: "FullName", key: "fullName" },
             { label: "Email", key: "email" },
@@ -615,6 +730,16 @@ export default function App() {
           <table>
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={users.length > 0 && selectedUsers.length === users.length} 
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedUsers(users.map(u => u._id));
+                      else setSelectedUsers([]);
+                    }}
+                  />
+                </th>
                 <th>Member Name</th>
                 <th>Email Contact</th>
                 <th>Access Level</th>
@@ -624,7 +749,17 @@ export default function App() {
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u._id}>
+                <tr key={u._id} className={selectedUsers.includes(u._id) ? 'selected' : ''}>
+                  <td>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedUsers.includes(u._id)} 
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedUsers(prev => [...prev, u._id]);
+                        else setSelectedUsers(prev => prev.filter(id => id !== u._id));
+                      }}
+                    />
+                  </td>
                   <td style={{ fontWeight: '500' }}>{u.fullName}</td>
                   <td>{u.email}</td>
                   <td>
@@ -657,7 +792,14 @@ export default function App() {
 
       <section className="card table-card" style={{ marginTop: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '20px' }}>
-          <h3><i data-lucide="history" style={{ color: '#f59e0b' }}></i> Transit History</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <h3><i data-lucide="history" style={{ color: '#f59e0b' }}></i> Transit History</h3>
+            {selectedDispatches.length > 0 && (
+              <button className="danger" style={{ padding: '6px 12px', fontSize: '0.75rem', borderRadius: '8px' }} onClick={onBulkDeleteDispatches}>
+                <i data-lucide="trash-2" style={{ width: '14px' }}></i> Delete ({selectedDispatches.length})
+              </button>
+            )}
+          </div>
           <button className="secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => downloadCSV(dispatches, "TransitLogs", [
             { label: "TrackingID", key: "trackingId" },
             { label: "Source", key: "fromBranch" },
@@ -672,6 +814,16 @@ export default function App() {
           <table>
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={dispatches.length > 0 && selectedDispatches.length === dispatches.length} 
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedDispatches(dispatches.map(d => d._id));
+                      else setSelectedDispatches([]);
+                    }}
+                  />
+                </th>
                 <th>Tracking Identity</th>
                 <th>Source Origin</th>
                 <th>Destination</th>
@@ -682,7 +834,17 @@ export default function App() {
             </thead>
             <tbody>
               {dispatches.map((d) => (
-                <tr key={d._id}>
+                <tr key={d._id} className={selectedDispatches.includes(d._id) ? 'selected' : ''}>
+                  <td>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedDispatches.includes(d._id)} 
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedDispatches(prev => [...prev, d._id]);
+                        else setSelectedDispatches(prev => prev.filter(id => id !== d._id));
+                      }}
+                    />
+                  </td>
                   <td><code style={{ fontWeight: '700', color: '#f59e0b' }}>#{d.trackingId}</code></td>
                   <td>{d.fromBranch}</td>
                   <td>{d.toBranch}</td>
@@ -711,6 +873,30 @@ export default function App() {
           </table>
         </div>
       </section>
+
+      <div className="toast-container">
+        {toasts.map((t) => (
+          <div key={t.id} className={`toast ${t.type}`}>
+            <i data-lucide={t.type === 'success' ? 'check-circle' : 'alert-circle'} style={{ width: '18px' }}></i>
+            {t.message}
+          </div>
+        ))}
+      </div>
+
+      {confirmData && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3><i data-lucide="help-circle" style={{ color: 'var(--warning)' }}></i> {confirmData.title}</h3>
+            <p>{confirmData.message}</p>
+            <div className="modal-actions">
+              <button className="secondary" onClick={() => setConfirmData(null)}>Dismiss</button>
+              <button className="danger" onClick={() => { confirmData.onConfirm(); setConfirmData(null); }}>
+                Proceed Deletion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -421,3 +421,23 @@ export const deleteDispatch = async (req, res, next) => {
   }
 };
 
+export const bulkDeleteDispatches = async (req, res, next) => {
+  try {
+    if (req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Bulk deletion is restricted to administrators" });
+    }
+
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ message: "ids array is required" });
+    }
+
+    const scopeQuery = await buildScopeQuery(req.user);
+    const result = await Dispatch.deleteMany({ _id: { $in: ids }, ...scopeQuery });
+    
+    res.json({ message: `${result.deletedCount} dispatch records removed from network` });
+  } catch (error) {
+    next(error);
+  }
+};
+

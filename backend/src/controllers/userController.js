@@ -119,3 +119,30 @@ export const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+export const bulkDeleteUsers = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ message: "ids array is required" });
+    }
+
+    // Admins can only delete users in their company and cannot delete themselves
+    const usersToDelete = await User.find({
+      _id: { $in: ids },
+      companyId: req.user.companyId,
+      _id: { $ne: req.user._id }
+    });
+
+    const foundIds = usersToDelete.map(u => String(u._id));
+
+    if (foundIds.length === 0) {
+      return res.status(404).json({ message: "No valid users found for deletion" });
+    }
+
+    await User.deleteMany({ _id: { $in: foundIds } });
+    res.json({ message: `${foundIds.length} users removed` });
+  } catch (error) {
+    next(error);
+  }
+};
