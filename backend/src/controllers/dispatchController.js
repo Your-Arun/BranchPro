@@ -1,4 +1,5 @@
 import { Branch } from "../models/Branch.js";
+import { Company } from "../models/Company.js";
 import { Dispatch } from "../models/Dispatch.js";
 import { User } from "../models/User.js";
 import { sendDispatchEmail, sendStatusUpdateEmail } from "../utils/mailer.js";
@@ -211,16 +212,17 @@ const buildTrackingId = () => `BF-${Math.floor(100000 + Math.random() * 899999)}
 
 export const createDispatch = async (req, res, next) => {
   try {
-    const { fromBranchId, toBranchId, category, courierName, description, dispatchDate, geoTrackingEnabled } = req.body;
+    const { fromBranchId, toBranchId, category, courierName, description, dispatchDate, geoTrackingEnabled, docketNumber } = req.body;
 
     if (!fromBranchId || !toBranchId || !category || !courierName || !dispatchDate) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
     // Security check: Verify branches belong to user's company
-    const [fromBranch, toBranch] = await Promise.all([
+    const [fromBranch, toBranch, company] = await Promise.all([
       Branch.findOne({ _id: fromBranchId, companyId: req.user.companyId }),
-      Branch.findOne({ _id: toBranchId, companyId: req.user.companyId })
+      Branch.findOne({ _id: toBranchId, companyId: req.user.companyId }),
+      Company.findById(req.user.companyId)
     ]);
 
     if (!fromBranch || !toBranch) {
@@ -238,6 +240,7 @@ export const createDispatch = async (req, res, next) => {
       toBranchId,
       category,
       courierName,
+      docketNumber: docketNumber ?? "",
       description: description ?? "",
       dispatchDate,
       geoTrackingEnabled: geoTrackingEnabled ?? true,
@@ -259,9 +262,8 @@ export const createDispatch = async (req, res, next) => {
       const destUsers = await User.find({ branchId: toBranchId }).select("email fullName").lean();
       const destEmails = destUsers.map(u => u.email).filter(Boolean);
       
-      // Also include the sender as a recipient for confirmation
-      const senderEmail = req.user?.email;
-      const allRecipients = Array.from(new Set([...destEmails, senderEmail])).filter(Boolean);
+      // Only include destination branch staff as recipients
+      const allRecipients = Array.from(new Set([...destEmails])).filter(Boolean);
 
       console.log(`[Email Dispatch] Target Branch: ${toBranchId}, Found ${destUsers.length} staff members.`);
       console.log(`[Email Dispatch] Recipients: ${allRecipients.join(', ')}`);
@@ -271,7 +273,7 @@ export const createDispatch = async (req, res, next) => {
             console.error('[Email Dispatch] Async Error:', err.message);
         });
       } else {
-        console.warn(`[Email Dispatch] No recipients found (no staff at branch and no sender email). No email sent.`);
+        console.warn(`[Email Dispatch] No recipients found at target branch. No email sent.`);
       }
     } catch (err) {
       console.error('[Email Dispatch] Trigger Error:', err.message);

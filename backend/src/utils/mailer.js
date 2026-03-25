@@ -1,17 +1,22 @@
 import nodemailer from 'nodemailer';
 
-// Create Gmail transporter
+// Create Gmail transporter optimized for Render/Hosting
 const createTransporter = () => {
   if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+    console.warn("[Mailer] SMTP credentials missing in environment");
     return null;
   }
+  
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false, // Use STARTTLS on port 587
     auth: {
       user: process.env.SMTP_EMAIL,
       pass: process.env.SMTP_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: false // Skip certificate validation for better compatibility
     }
   });
 };
