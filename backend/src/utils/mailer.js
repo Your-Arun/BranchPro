@@ -1,16 +1,15 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 
-// ─── Create Transporter (VPS Safe) ─────────────────────────────
+// ✅ FORCE IPv4 (MOST IMPORTANT FIX)
+dns.setDefaultResultOrder('ipv4first');
+
 const createTransporter = async () => {
-  if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
-    console.warn("❌ Missing SMTP credentials");
-    return null;
-  }
-
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 465,        // ✅ VPS ke liye best
-    secure: true,     // ✅ MUST TRUE
+    port: 465,
+    secure: true,
+    family: 4, // ✅ FORCE IPv4
     auth: {
       user: process.env.SMTP_EMAIL,
       pass: process.env.SMTP_PASSWORD,
@@ -21,13 +20,12 @@ const createTransporter = async () => {
     await transporter.verify();
     console.log("✅ Gmail Connected");
   } catch (err) {
-    console.error("❌ Gmail Connection Error:", err.message);
+    console.error("❌ Gmail Error:", err.message);
     return null;
   }
 
   return transporter;
 };
-
 
 // ─── Common Send Function ─────────────────────────────
 const sendMail = async (emails, subject, html) => {
