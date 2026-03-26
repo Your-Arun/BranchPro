@@ -1,51 +1,32 @@
-import nodemailer from 'nodemailer';
-
-let transporter;
-
-// ─── Create Transporter (ONLY ONCE) ─────────────────
-const createTransporter = async () => {
-  if (transporter) return transporter;
-
-  transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com", // ✅ CHANGED
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER, // ✅ CHANGED
-      pass: process.env.SMTP_PASS, // ✅ CHANGED
-    },
-  });
-
-  try {
-    await transporter.verify();
-    console.log("✅ Brevo Connected");
-  } catch (err) {
-    console.error("❌ Brevo Verify Error:", err);
-    transporter = null;
-  }
-
-  return transporter;
-};
-
+import axios from "axios";
 
 // ─── Common Send Function ─────────────────────────────
 const sendMail = async (emails, subject, html) => {
-  const t = await createTransporter();
-  if (!t) return;
-
   try {
     console.log("📨 Sending to:", emails);
 
-    const info = await t.sendMail({
-      from: `"BranchFlow Alerts" <${process.env.SMTP_USER}>`, // ✅ CHANGED
-      to: emails.join(','), 
-      subject,
-      html,
-    });
+    const res = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: "BranchFlow Alerts",
+          email: process.env.BREVO_EMAIL, // verified email
+        },
+        to: emails.map(e => ({ email: e })),
+        subject,
+        htmlContent: html,
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    console.log("✅ Email Sent:", info.messageId);
+    console.log("✅ Email Sent:", res.data);
   } catch (error) {
-    console.error("❌ Send Error FULL:", error);
+    console.error("❌ Send Error FULL:", error.response?.data || error.message);
   }
 };
 
