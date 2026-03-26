@@ -1,106 +1,52 @@
-// import nodemailer from 'nodemailer';
+import nodemailer from 'nodemailer';
 
-// // ✅ Create Gmail transporter (FIXED)
-// const createTransporter = async () => {
-//   if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
-//     console.warn("[Mailer] ❌ Missing SMTP credentials");
-//     return null;
-//   }
+// ─── Create Transporter (VPS Safe) ─────────────────────────────
+const createTransporter = async () => {
+  if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+    console.warn("❌ Missing SMTP credentials");
+    return null;
+  }
 
-//   const transporter = nodemailer.createTransport({
-//     service: 'gmail', // ✅ IMPORTANT FIX
-//     auth: {
-//       user: process.env.SMTP_EMAIL,
-//       pass: process.env.SMTP_PASSWORD
-//     },
-//     connectionTimeout: 10000, // 10 seconds
-//     greetingTimeout: 5000,    // 5 seconds
-//     socketTimeout: 10000      // 10 seconds
-//   });
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,        // ✅ VPS ke liye best
+    secure: true,     // ✅ MUST TRUE
+    auth: {
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
 
-//   // ✅ Verify connection (debug ke liye)
-//   try {
-//     await transporter.verify();
-//     console.log("[Mailer] ✅ Gmail server ready");
-//   } catch (err) {
-//     console.error("[Mailer] ❌ Gmail connection failed:", err.message);
-//     return null;
-//   }
+  try {
+    await transporter.verify();
+    console.log("✅ Gmail Connected");
+  } catch (err) {
+    console.error("❌ Gmail Connection Error:", err.message);
+    return null;
+  }
 
-//   return transporter;
-// };
+  return transporter;
+};
 
 
-// // ─── Dispatch Created Notification ───────────────────────────────────
-// export const sendDispatchEmail = async (emails, dispatchData, fromBranchName, toBranchName) => {
-//   const transporter = await createTransporter();
-//   if (!transporter) return;
+// ─── Common Send Function ─────────────────────────────
+const sendMail = async (emails, subject, html) => {
+  const transporter = await createTransporter();
+  if (!transporter) return;
 
-//   try {
-//     const info = await transporter.sendMail({
-//       from: `"BranchFlow Alerts" <${process.env.SMTP_EMAIL}>`,
-//       to: emails.join(','), // ✅ FIX
-//       subject: `🚚 New Dispatch Incoming: #${dispatchData.trackingId}`,
-//       html: `
-//         <div style="font-family: Segoe UI; padding:20px;">
-//           <h2>📦 New Dispatch</h2>
-//           <p><b>Tracking:</b> #${dispatchData.trackingId}</p>
-//           <p><b>From:</b> ${fromBranchName}</p>
-//           <p><b>To:</b> ${toBranchName}</p>
-//           <p><b>Courier:</b> ${dispatchData.courierName}</p>
-//         </div>
-//       `
-//     });
+  try {
+    const info = await transporter.sendMail({
+      from: `"BranchFlow Alerts" <${process.env.SMTP_EMAIL}>`,
+      to: emails.join(','), // ✅ multiple emails supported
+      subject,
+      html,
+    });
 
-//     console.log("✅ Dispatch Email Sent:", info.messageId);
-//   } catch (error) {
-//     console.error("❌ Dispatch Email Error:", error.message);
-//   }
-// };
-
-
-// // ─── Status Update Notification ──────────────────────────────────────
-// export const sendStatusUpdateEmail = async (
-//   emails,
-//   dispatchData,
-//   fromBranchName,
-//   toBranchName,
-//   newStatus,
-//   updatedBy
-// ) => {
-
-//   const transporter = await createTransporter();
-//   if (!transporter) return;
-
-//   try {
-//     const info = await transporter.sendMail({
-//       from: `"BranchFlow Alerts" <${process.env.SMTP_EMAIL}>`,
-//       to: emails.join(','), // ✅ FIX
-//       subject: `📦 #${dispatchData.trackingId} → ${newStatus}`,
-//       html: `
-//         <div style="font-family: Segoe UI; padding:20px;">
-//           <h2>Status Update</h2>
-//           <p><b>Tracking:</b> #${dispatchData.trackingId}</p>
-//           <p><b>Status:</b> ${newStatus}</p>
-//           <p><b>From:</b> ${fromBranchName}</p>
-//           <p><b>To:</b> ${toBranchName}</p>
-//           <p><b>Updated By:</b> ${updatedBy || 'System'}</p>
-//         </div>
-//       `
-//     });
-
-//     console.log("✅ Status Email Sent:", info.messageId);
-//   } catch (error) {
-//     console.error("❌ Status Email Error:", error.message);
-//   }
-// };
-
-
-
-
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+    console.log("✅ Email Sent:", info.messageId);
+  } catch (error) {
+    console.error("❌ Send Error:", error.message);
+  }
+};
 
 
 // ─── Dispatch Email ─────────────────────────────
@@ -110,31 +56,20 @@ export const sendDispatchEmail = async (
   fromBranchName,
   toBranchName
 ) => {
-  try {
-    const { data, error } = await resend.emails.send({
-      from: 'BranchFlow Alerts <onboarding@resend.dev>',
-      to: emails,
-      reply_to: 'yourgmail@gmail.com', // ✅ IMPORTANT (reply tere paas aayega)
-      subject: `🚚 New Dispatch #${dispatchData.trackingId}`,
-      html: `
-        <div style="font-family:Segoe UI;padding:20px">
-          <h2>📦 New Dispatch</h2>
-          <p><b>Tracking:</b> #${dispatchData.trackingId}</p>
-          <p><b>From:</b> ${fromBranchName}</p>
-          <p><b>To:</b> ${toBranchName}</p>
-          <p><b>Courier:</b> ${dispatchData.courierName}</p>
-        </div>
-      `
-    });
 
-    if (error) {
-      console.error("❌ Dispatch Error:", error);
-    } else {
-      console.log("✅ Dispatch Sent:", data.id);
-    }
-  } catch (err) {
-    console.error("❌ Error:", err.message);
-  }
+  const subject = `🚚 New Dispatch #${dispatchData.trackingId}`;
+
+  const html = `
+    <div style="font-family:Segoe UI;padding:20px">
+      <h2>📦 New Dispatch</h2>
+      <p><b>Tracking:</b> #${dispatchData.trackingId}</p>
+      <p><b>From:</b> ${fromBranchName}</p>
+      <p><b>To:</b> ${toBranchName}</p>
+      <p><b>Courier:</b> ${dispatchData.courierName}</p>
+    </div>
+  `;
+
+  await sendMail(emails, subject, html);
 };
 
 
@@ -147,30 +82,19 @@ export const sendStatusUpdateEmail = async (
   newStatus,
   updatedBy
 ) => {
-  try {
-    const { data, error } = await resend.emails.send({
-      from: 'BranchFlow Alerts <onboarding@resend.dev>',
-      to: emails,
-      reply_to: 'yourgmail@gmail.com',
-      subject: `📦 #${dispatchData.trackingId} → ${newStatus}`,
-      html: `
-        <div style="font-family:Segoe UI;padding:20px">
-          <h2>Status Update</h2>
-          <p><b>Tracking:</b> #${dispatchData.trackingId}</p>
-          <p><b>Status:</b> ${newStatus}</p>
-          <p><b>From:</b> ${fromBranchName}</p>
-          <p><b>To:</b> ${toBranchName}</p>
-          <p><b>Updated By:</b> ${updatedBy || 'System'}</p>
-        </div>
-      `
-    });
 
-    if (error) {
-      console.error("❌ Status Error:", error);
-    } else {
-      console.log("✅ Status Sent:", data.id);
-    }
-  } catch (err) {
-    console.error("❌ Error:", err.message);
-  }
+  const subject = `📦 #${dispatchData.trackingId} → ${newStatus}`;
+
+  const html = `
+    <div style="font-family:Segoe UI;padding:20px">
+      <h2>Status Update</h2>
+      <p><b>Tracking:</b> #${dispatchData.trackingId}</p>
+      <p><b>Status:</b> ${newStatus}</p>
+      <p><b>From:</b> ${fromBranchName}</p>
+      <p><b>To:</b> ${toBranchName}</p>
+      <p><b>Updated By:</b> ${updatedBy || 'System'}</p>
+    </div>
+  `;
+
+  await sendMail(emails, subject, html);
 };
