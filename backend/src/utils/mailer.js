@@ -1,8 +1,4 @@
 import nodemailer from 'nodemailer';
-import dns from 'dns';
-
-// ✅ FORCE IPv4
-dns.setDefaultResultOrder('ipv4first');
 
 let transporter;
 
@@ -11,27 +7,20 @@ const createTransporter = async () => {
   if (transporter) return transporter;
 
   transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host: "smtp-relay.brevo.com", // ✅ CHANGED
     port: 587,
     secure: false,
-    family: 4, // ✅ IPv4 force
     auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD,
+      user: process.env.SMTP_USER, // ✅ CHANGED
+      pass: process.env.SMTP_PASS, // ✅ CHANGED
     },
-    tls: {
-      rejectUnauthorized: false // ✅ VPS compatibility
-    },
-    pool: true, // ✅ stable multiple sends
-    maxConnections: 5,
-    maxMessages: 100
   });
 
   try {
     await transporter.verify();
-    console.log("✅ Gmail Connected");
+    console.log("✅ Brevo Connected");
   } catch (err) {
-    console.error("❌ Gmail Verify Error:", err);
+    console.error("❌ Brevo Verify Error:", err);
     transporter = null;
   }
 
@@ -48,7 +37,7 @@ const sendMail = async (emails, subject, html) => {
     console.log("📨 Sending to:", emails);
 
     const info = await t.sendMail({
-      from: `"BranchFlow Alerts" <${process.env.SMTP_EMAIL}>`,
+      from: `"BranchFlow Alerts" <${process.env.SMTP_USER}>`, // ✅ CHANGED
       to: emails.join(','), 
       subject,
       html,
