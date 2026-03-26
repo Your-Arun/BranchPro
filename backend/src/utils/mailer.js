@@ -1,48 +1,62 @@
 import nodemailer from 'nodemailer';
 import dns from 'dns';
 
-// ✅ FORCE IPv4 (MOST IMPORTANT FIX)
+// ✅ FORCE IPv4
 dns.setDefaultResultOrder('ipv4first');
 
+let transporter;
+
+// ─── Create Transporter (ONLY ONCE) ─────────────────
 const createTransporter = async () => {
-  const transporter = nodemailer.createTransport({
+  if (transporter) return transporter;
+
+  transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
-    family: 4, // ✅ FORCE IPv4
+    family: 4, // ✅ IPv4 force
     auth: {
       user: process.env.SMTP_EMAIL,
       pass: process.env.SMTP_PASSWORD,
     },
+    tls: {
+      rejectUnauthorized: false // ✅ VPS compatibility
+    },
+    pool: true, // ✅ stable multiple sends
+    maxConnections: 5,
+    maxMessages: 100
   });
 
   try {
     await transporter.verify();
     console.log("✅ Gmail Connected");
   } catch (err) {
-    console.error("❌ Gmail Error:", err.message);
-    return null;
+    console.error("❌ Gmail Verify Error:", err);
+    transporter = null;
   }
 
   return transporter;
 };
 
+
 // ─── Common Send Function ─────────────────────────────
 const sendMail = async (emails, subject, html) => {
-  const transporter = await createTransporter();
-  if (!transporter) return;
+  const t = await createTransporter();
+  if (!t) return;
 
   try {
-    const info = await transporter.sendMail({
+    console.log("📨 Sending to:", emails);
+
+    const info = await t.sendMail({
       from: `"BranchFlow Alerts" <${process.env.SMTP_EMAIL}>`,
-      to: emails.join(','), // ✅ multiple emails supported
+      to: emails.join(','), 
       subject,
       html,
     });
 
     console.log("✅ Email Sent:", info.messageId);
   } catch (error) {
-    console.error("❌ Send Error:", error.message);
+    console.error("❌ Send Error FULL:", error);
   }
 };
 
