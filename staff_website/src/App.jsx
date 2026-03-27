@@ -8,6 +8,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Incoming from './pages/Incoming';
 import Dispatch from './pages/Dispatch';
+import GeneralEntry from './pages/GeneralEntry';
 import Profile from './pages/Profile';
 import DispatchDetails from './pages/DispatchDetails';
 
@@ -30,6 +31,7 @@ function AppRoutes() {
       <Route path="/dispatch" element={<ProtectedRoute><Dispatch /></ProtectedRoute>} />
       <Route path="/dispatch/edit/:id" element={<ProtectedRoute><Dispatch /></ProtectedRoute>} />
       <Route path="/details/:id" element={<ProtectedRoute><DispatchDetails /></ProtectedRoute>} />
+      <Route path="/general-entry" element={<ProtectedRoute><GeneralEntry /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

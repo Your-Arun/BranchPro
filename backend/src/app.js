@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import branchRoutes from "./routes/branchRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import dispatchRoutes from "./routes/dispatchRoutes.js";
+import generalEntryRoutes from "./routes/generalEntryRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { errorHandler, notFound } from "./middleware/error.js";
@@ -31,6 +32,7 @@ export const createApp = () => {
   app.use("/api/branches", branchRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/reports", reportRoutes);
+  app.use("/api/general-entries", generalEntryRoutes);
   app.use("/api/admin", adminRoutes);
 
   app.use(notFound);

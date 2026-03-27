@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Download, Send, User } from 'lucide-react';
+import { LayoutDashboard, Download, Send, User, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Layout = ({ children }) => {
@@ -32,6 +32,9 @@ const Layout = ({ children }) => {
           </NavLink>
           <NavLink to="/dispatch" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Send size={20} /> Create Dispatch
+          </NavLink>
+          <NavLink to="/general-entry" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Package size={20} /> General Entry
           </NavLink>
           <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <User size={20} /> Profile
