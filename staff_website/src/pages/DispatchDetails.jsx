@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Package, ArrowLeft, Send, Download, Tag, Info, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Package, ArrowLeft, Send, Download, Tag, Info, CheckCircle, Clock, XCircle, Edit } from 'lucide-react';
 
 const formatTime = (dateStr) => {
   if (!dateStr) return '';
@@ -77,15 +77,35 @@ const DispatchDetails = () => {
           </h1>
           <p className="subtitle" style={{ marginTop: '4px' }}>Created on {formatTime(dispatchData.createdAt)}</p>
         </div>
-        <div style={{ 
-          padding: '8px 20px', 
-          borderRadius: '100px', 
-          backgroundColor: `${getStatusColor(dispatchData.status)}22`, 
-          color: getStatusColor(dispatchData.status),
-          fontWeight: 'bold',
-          fontSize: '14px'
-        }}>
-          {dispatchData.status}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <button 
+            onClick={() => navigate(`/dispatch/edit/${id}`)}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              padding: '8px 16px', 
+              backgroundColor: 'var(--bg-soft)', 
+              border: '1px solid var(--border)', 
+              borderRadius: '12px', 
+              color: 'var(--text)',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            <Edit size={16} /> Edit
+          </button>
+          <div style={{ 
+            padding: '8px 20px', 
+            borderRadius: '100px', 
+            backgroundColor: `${getStatusColor(dispatchData.status)}22`, 
+            color: getStatusColor(dispatchData.status),
+            fontWeight: 'bold',
+            fontSize: '14px'
+          }}>
+            {dispatchData.status}
+          </div>
         </div>
       </div>
 

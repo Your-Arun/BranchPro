@@ -125,6 +125,14 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const updateDispatch = async (id, payload) => {
+    const { data } = await api.patch(`/dispatches/${id}`, payload);
+    setDispatches((prev) => prev.map((d) => (d._id === id ? data : d)));
+    // Don't wait for loadAll to complete, just trigger it
+    loadAll();
+    return data;
+  };
+
   const updateProfile = async (payload) => {
     const { data } = await api.put("/auth/me", payload);
     localStorage.setItem('userInfo', JSON.stringify(data));
@@ -134,7 +142,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      user, login, signup, logout, loading, error, dashboard, dispatches, branches, refresh: loadAll, createDispatch, updateStatus, updateProfile, api,
+      user, login, signup, logout, loading, error, dashboard, dispatches, branches, refresh: loadAll, createDispatch, updateStatus, updateDispatch, updateProfile, api,
       toasts, confirmData, toast, confirm, setToasts, setConfirmData, handleConfirm, handleCancel
     }}>
       {children}

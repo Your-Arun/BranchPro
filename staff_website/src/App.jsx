@@ -28,6 +28,7 @@ function AppRoutes() {
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/incoming" element={<ProtectedRoute><Incoming /></ProtectedRoute>} />
       <Route path="/dispatch" element={<ProtectedRoute><Dispatch /></ProtectedRoute>} />
+      <Route path="/dispatch/edit/:id" element={<ProtectedRoute><Dispatch /></ProtectedRoute>} />
       <Route path="/details/:id" element={<ProtectedRoute><DispatchDetails /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" />} />

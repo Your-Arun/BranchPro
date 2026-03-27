@@ -361,10 +361,6 @@ export const updateDispatch = async (req, res, next) => {
       status 
     } = req.body;
 
-    if (req.user.role !== "ADMIN") {
-      return res.status(403).json({ message: "Editing dispatch details is restricted to administrators" });
-    }
-
     const scopeQuery = await buildScopeQuery(req.user);
     const updateData = {};
     if (category) updateData.category = category;
