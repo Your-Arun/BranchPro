@@ -67,6 +67,7 @@ const Incoming = () => {
                     <Download size={16} /> To: {item.toBranch}
                   </div>
                   <div>Category: {item.category}</div>
+                  <div>Docket: {item.docketNumber}</div>
                 </div>
               </div>
               
