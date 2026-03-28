@@ -15,6 +15,7 @@ const Dispatch = () => {
     description: '',
     dispatchDate: new Date()
   });
+  const [trackingId, setTrackingId] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,6 +40,7 @@ const Dispatch = () => {
             description: data.description || '',
             dispatchDate: new Date(data.dispatchDate)
           });
+          setTrackingId(data.trackingId || '');
         } catch (err) {
           toast("Failed to load dispatch data", "error");
           navigate('/incoming');
@@ -146,6 +148,18 @@ const Dispatch = () => {
             />
           </div>
 
+          {isEditMode && trackingId && (
+            <div className="input-group">
+              <label>Tracking ID</label>
+              <input
+                className="input-field"
+                type="text"
+                value={trackingId}
+                disabled
+                style={{ backgroundColor: 'var(--bg-soft)', color: 'var(--muted)' }}
+              />
+            </div>
+          )}
           <div className="input-group">
             <label>Docket / Tracking Number *</label>
             <input

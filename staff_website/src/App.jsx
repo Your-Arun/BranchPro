@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -18,6 +18,22 @@ const ProtectedRoute = ({ children }) => {
   return <Layout>{children}</Layout>;
 };
 
+const NotFoundRedirect = () => {
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    // If user is logged in, redirect to home
+    if (user) {
+      window.location.href = '/';
+    } else {
+      // If not logged in, redirect to login
+      window.location.href = '/login';
+    }
+  }, [user]);
+
+  return <div>Redirecting...</div>;
+};
+
 function AppRoutes() {
   const { user } = useAuth();
 
@@ -33,7 +49,7 @@ function AppRoutes() {
       <Route path="/details/:id" element={<ProtectedRoute><DispatchDetails /></ProtectedRoute>} />
       <Route path="/general-entry" element={<ProtectedRoute><GeneralEntry /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to="/" />} />
+      <Route path="*" element={<NotFoundRedirect />} />
     </Routes>
   );
 }
