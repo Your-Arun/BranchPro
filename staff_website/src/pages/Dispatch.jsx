@@ -7,13 +7,14 @@ const Dispatch = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format
   const [form, setForm] = useState({
     toBranchId: '',
     category: '',
     courierName: '',
     docketNumber: '',
     description: '',
-    dispatchDate: new Date()
+    dispatchDate: todayStr
   });
   const [trackingId, setTrackingId] = useState('');
 
@@ -32,13 +33,15 @@ const Dispatch = () => {
         try {
           const { data } = await api.get(`/dispatches/${id}`);
           setIsEditMode(true);
+          // Extract YYYY-MM-DD from the date string to avoid timezone issues
+          const dateStr = data.dispatchDate ? new Date(data.dispatchDate).toLocaleDateString('en-CA') : todayStr;
           setForm({
             toBranchId: data.toBranchId?._id || data.toBranchId,
             category: data.category,
             courierName: data.courierName,
             docketNumber: data.docketNumber || data.docketNo || data.docket_no || '',
             description: data.description || '',
-            dispatchDate: new Date(data.dispatchDate)
+            dispatchDate: dateStr
           });
           setTrackingId(data.trackingId || '');
         } catch (err) {
@@ -62,7 +65,7 @@ const Dispatch = () => {
       fromBranchId: branchId,
       docketNo: form.docketNumber,
       docket_no: form.docketNumber,
-      dispatchDate: form.dispatchDate.toISOString()
+      dispatchDate: form.dispatchDate + 'T00:00:00'
     };
 
     try {
@@ -97,13 +100,8 @@ const Dispatch = () => {
             <input
               className="input-field"
               type="date"
-              value={form.dispatchDate.toISOString().split('T')[0]}
-              onChange={(e) => {
-                const selectedDate = new Date(e.target.value);
-                // Set time to start of day to avoid timezone issues
-                selectedDate.setHours(0, 0, 0, 0);
-                setForm({ ...form, dispatchDate: selectedDate });
-              }}
+              value={form.dispatchDate}
+              onChange={(e) => setForm({ ...form, dispatchDate: e.target.value })}
               required
             />
           </div>

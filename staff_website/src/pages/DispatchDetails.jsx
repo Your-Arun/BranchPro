@@ -143,6 +143,10 @@ const DispatchDetails = () => {
             <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '4px', fontWeight: 'bold' }}>TRACKING NO. (MANUAL)</p>
             <p style={{ fontSize: '16px', margin: 0, fontWeight: '500' }}>{dispatchData.docketNumber || dispatchData.docketNo || dispatchData.docket_no || 'N/A'}</p>
           </div>
+          <div>
+            <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '4px', fontWeight: 'bold' }}>DISPATCH DATE</p>
+            <p style={{ fontSize: '16px', margin: 0, fontWeight: '500' }}>{dispatchData.dispatchDate ? new Date(dispatchData.dispatchDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</p>
+          </div>
         </div>
 
         {dispatchData.description && (
