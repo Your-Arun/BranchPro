@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 import Layout from './components/Layout';
@@ -20,22 +20,31 @@ const ProtectedRoute = ({ children }) => {
 
 const NotFoundRedirect = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
-    // If user is logged in, redirect to home
     if (user) {
-      window.location.href = '/';
+      navigate('/', { replace: true });
     } else {
-      // If not logged in, redirect to login
-      window.location.href = '/login';
+      navigate('/login', { replace: true });
     }
-  }, [user]);
+  }, [user, navigate]);
 
   return <div>Redirecting...</div>;
 };
 
 function AppRoutes() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // This logic ensures that whenever the page is refreshed (component mounts), 
+  // if the user is already logged in and not on the home page, they get redirected to home.
+  useEffect(() => {
+    if (user && (location.pathname !== '/' || location.hash !== '#/')) {
+      navigate('/', { replace: true });
+    }
+  }, []);
 
   return (
     <Routes>
@@ -56,11 +65,11 @@ function AppRoutes() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

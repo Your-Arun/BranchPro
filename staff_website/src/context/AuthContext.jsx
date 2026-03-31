@@ -22,31 +22,6 @@ export const AuthProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const [confirmData, setConfirmData] = useState(null);
 
-  // Auto-logout after 30 minutes of inactivity
-  useEffect(() => {
-    let inactivityTimer;
-
-    const resetTimer = () => {
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => {
-        if (user) {
-          logout();
-          toast("You have been logged out due to inactivity", "info");
-        }
-      }, 30 * 60 * 1000); // 30 minutes
-    };
-
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    events.forEach(event => document.addEventListener(event, resetTimer, true));
-
-    resetTimer(); // Initial setup
-
-    return () => {
-      clearTimeout(inactivityTimer);
-      events.forEach(event => document.removeEventListener(event, resetTimer, true));
-    };
-  }, [user, logout, toast]);
-
   const toast = useCallback((message, type = "success") => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
@@ -54,6 +29,8 @@ export const AuthProvider = ({ children }) => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 4000);
   }, []);
+
+
 
   const confirm = useCallback((title, message, onConfirm) => {
     setConfirmData({ title, message, onConfirm });
@@ -128,13 +105,38 @@ export const AuthProvider = ({ children }) => {
     setUser(data);
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('userInfo');
     setUser(null);
     setDashboard(null);
     setDispatches([]);
     setBranches([]);
-  };
+  }, []);
+
+  // Auto-logout after 30 minutes of inactivity
+  useEffect(() => {
+    let inactivityTimer;
+
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        if (user) {
+          logout();
+          toast("You have been logged out due to inactivity", "info");
+        }
+      }, 30 * 60 * 1000); // 30 minutes
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(event => document.addEventListener(event, resetTimer, true));
+
+    resetTimer(); // Initial setup
+
+    return () => {
+      clearTimeout(inactivityTimer);
+      events.forEach(event => document.removeEventListener(event, resetTimer, true));
+    };
+  }, [user, logout, toast]);
 
   const createDispatch = async (payload) => {
     const { data } = await api.post("/dispatches", payload);
