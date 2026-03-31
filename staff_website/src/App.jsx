@@ -38,10 +38,10 @@ function AppRoutes() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // This logic ensures that whenever the page is refreshed (component mounts), 
-  // if the user is already logged in and not on the home page, they get redirected to home.
   useEffect(() => {
-    if (user && (location.pathname !== '/' || location.hash !== '#/')) {
+    if (!user && location.pathname !== '/login' && location.pathname !== '/signup') {
+      navigate('/login', { replace: true });
+    } else if (user && location.pathname !== '/') {
       navigate('/', { replace: true });
     }
   }, []);

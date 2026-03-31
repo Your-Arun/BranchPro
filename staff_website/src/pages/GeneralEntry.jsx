@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Package, ArrowLeft, Save, Plus, Trash2, Edit, Eye } from 'lucide-react';
 
 const GeneralEntry = () => {
-  const { api, user, toast } = useAuth();
+  const { api, user, toast, confirm } = useAuth();
   const navigate = useNavigate();
 
   const [entries, setEntries] = useState([]);
@@ -83,17 +83,15 @@ const GeneralEntry = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this entry?")) {
-      return;
-    }
-
-    try {
-      await api.delete(`/general-entries/${id}`);
-      toast("Entry deleted successfully", "success");
-      fetchEntries();
-    } catch (err) {
-      toast(err.response?.data?.message || "Failed to delete entry", "error");
-    }
+    confirm("Delete Entry", "Are you sure you want to delete this entry?", async () => {
+      try {
+        await api.delete(`/general-entries/${id}`);
+        toast("Entry deleted successfully", "success");
+        fetchEntries();
+      } catch (err) {
+        toast(err.response?.data?.message || "Failed to delete entry", "error");
+      }
+    });
   };
 
   const formatTime = (dateStr) => {

@@ -124,11 +124,22 @@ export const updateGeneralEntry = async (req, res, next) => {
   try {
     const { itemName, quantity, description, entryType, category } = req.body;
 
-    const scopeQuery = await buildScopeQuery(req.user);
-    const entry = await GeneralEntry.findOne({ _id: req.params.id, ...scopeQuery });
+    const entry = await GeneralEntry.findById(req.params.id);
 
     if (!entry) {
-      return res.status(404).json({ message: "Entry not found or unauthorized" });
+      return res.status(404).json({ message: "Entry not found in the database" });
+    }
+    
+    const role = req.user.role || "UNKNOWN";
+    
+    if (role === "ADMIN") {
+      if (String(entry.companyId) !== String(req.user.companyId)) {
+        return res.status(403).json({ message: "Not authorized to update this entry (Admin Company Mismatch)" });
+      }
+    } else {
+      if (String(entry.branchId) !== String(req.user.branchId)) {
+        return res.status(403).json({ message: "Not authorized to update this entry (Branch Mismatch)" });
+      }
     }
 
     // Update fields
@@ -156,13 +167,25 @@ export const updateGeneralEntry = async (req, res, next) => {
 
 export const deleteGeneralEntry = async (req, res, next) => {
   try {
-    const scopeQuery = await buildScopeQuery(req.user);
-    const entry = await GeneralEntry.findOneAndDelete({ _id: req.params.id, ...scopeQuery });
+    const entry = await GeneralEntry.findById(req.params.id);
     
     if (!entry) {
-      return res.status(404).json({ message: "Entry not found or unauthorized" });
+      return res.status(404).json({ message: "Entry not found in the database" });
     }
     
+    const role = req.user.role || "UNKNOWN";
+    
+    if (role === "ADMIN") {
+      if (String(entry.companyId) !== String(req.user.companyId)) {
+        return res.status(403).json({ message: "Not authorized to delete this entry (Admin Company Mismatch)" });
+      }
+    } else {
+      if (String(entry.branchId) !== String(req.user.branchId)) {
+        return res.status(403).json({ message: "Not authorized to delete this entry (Branch Mismatch)" });
+      }
+    }
+    
+    await GeneralEntry.findByIdAndDelete(req.params.id);
     res.json({ message: "Entry deleted successfully" });
   } catch (error) {
     next(error);

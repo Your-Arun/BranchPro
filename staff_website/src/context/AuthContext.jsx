@@ -52,6 +52,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const authRef = useRef(user);
+  const logoutRef = useRef();
+
   useEffect(() => {
     authRef.current = user;
     if (user?.token) {
@@ -60,6 +62,32 @@ export const AuthProvider = ({ children }) => {
       delete api.defaults.headers.common["Authorization"];
     }
   }, [user]);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('userInfo');
+    setUser(null);
+    setDashboard(null);
+    setDispatches([]);
+    setBranches([]);
+  }, []);
+
+  useEffect(() => {
+    logoutRef.current = logout;
+  }, [logout]);
+
+  useEffect(() => {
+    const interceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          if (logoutRef.current) logoutRef.current();
+          toast("Session expired or user not found. Please log in again.", "error");
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => api.interceptors.response.eject(interceptor);
+  }, [toast]);
 
   const loadAll = useCallback(async () => {
     if (!authRef.current) return;
@@ -105,13 +133,6 @@ export const AuthProvider = ({ children }) => {
     setUser(data);
   };
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('userInfo');
-    setUser(null);
-    setDashboard(null);
-    setDispatches([]);
-    setBranches([]);
-  }, []);
 
   // Auto-logout after 30 minutes of inactivity
   useEffect(() => {
