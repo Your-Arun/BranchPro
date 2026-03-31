@@ -59,10 +59,13 @@ const toDto = (dispatch) => {
     trackingId: dispatch.trackingId,
     fromBranch: dispatch.fromBranchId?.name ?? "External/Unknown",
     toBranch: dispatch.toBranchId?.name ?? "External/Unknown",
+    fromBranchCode: dispatch.fromBranchId?.code ?? "N/A",
+    toBranchCode: dispatch.toBranchId?.code ?? "N/A",
     fromBranchId: dispatch.fromBranchId?._id || dispatch.fromBranchId,
     toBranchId: dispatch.toBranchId?._id || dispatch.toBranchId,
     category: dispatch.category,
     courierName: dispatch.courierName,
+    docketNumber: dispatch.docketNumber,
     description: dispatch.description,
     dispatchDate: dispatch.dispatchDate,
     status: status,
@@ -171,8 +174,8 @@ export const listDispatches = async (req, res, next) => {
     const query = statusFilter ? { ...scopeQuery, status: statusFilter } : scopeQuery;
 
     const dispatches = await Dispatch.find(query)
-      .populate("fromBranchId", "name")
-      .populate("toBranchId", "name")
+      .populate("fromBranchId", "name code")
+      .populate("toBranchId", "name code")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -194,8 +197,8 @@ export const getDispatchById = async (req, res, next) => {
   try {
     const scopeQuery = await buildScopeQuery(req.user);
     const dispatch = await Dispatch.findOne({ _id: req.params.id, ...scopeQuery })
-      .populate("fromBranchId", "name")
-      .populate("toBranchId", "name")
+      .populate("fromBranchId", "name code")
+      .populate("toBranchId", "name code")
       .lean();
 
     if (!dispatch) {
@@ -253,8 +256,8 @@ export const createDispatch = async (req, res, next) => {
     });
 
     const populated = await Dispatch.findById(newDispatch._id)
-      .populate("fromBranchId", "name")
-      .populate("toBranchId", "name")
+      .populate("fromBranchId", "name code")
+      .populate("toBranchId", "name code")
       .lean();
 
     // Trigger email alert in the background
@@ -304,8 +307,8 @@ export const updateDispatchStatus = async (req, res, next) => {
 
     await doc.save();
     const updated = await Dispatch.findById(doc._id)
-      .populate("fromBranchId", "name")
-      .populate("toBranchId", "name")
+      .populate("fromBranchId", "name code")
+      .populate("toBranchId", "name code")
       .lean();
 
     if (!updated) {
@@ -387,8 +390,8 @@ export const updateDispatch = async (req, res, next) => {
 
     await doc.save();
     const updated = await Dispatch.findById(doc._id)
-      .populate("fromBranchId", "name")
-      .populate("toBranchId", "name")
+      .populate("fromBranchId", "name code")
+      .populate("toBranchId", "name code")
       .lean();
 
     if (!updated) {

@@ -36,7 +36,7 @@ const Dispatch = () => {
             toBranchId: data.toBranchId?._id || data.toBranchId,
             category: data.category,
             courierName: data.courierName,
-            docketNumber: data.docketNumber,
+            docketNumber: data.docketNumber || data.docketNo || data.docket_no || '',
             description: data.description || '',
             dispatchDate: new Date(data.dispatchDate)
           });
@@ -60,6 +60,8 @@ const Dispatch = () => {
     const payload = {
       ...form,
       fromBranchId: branchId,
+      docketNo: form.docketNumber,
+      docket_no: form.docketNumber,
       dispatchDate: form.dispatchDate.toISOString()
     };
 
@@ -161,7 +163,7 @@ const Dispatch = () => {
             </div>
           )}
           <div className="input-group">
-            <label>Docket / Tracking Number *</label>
+            <label>Manual Tracking No. / Docket *</label>
             <input
               className="input-field"
               type="text"

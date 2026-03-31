@@ -115,7 +115,7 @@ const DispatchDetails = () => {
             <Send size={16} /> SENDER BRANCH
           </h3>
           <p style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 4px 0' }}>{dispatchData.fromBranchId?.name || dispatchData.fromBranch}</p>
-          <p style={{ color: 'var(--muted)', margin: 0 }}>Code: {dispatchData.fromBranchId?.code || 'N/A'}</p>
+          <p style={{ color: 'var(--muted)', margin: 0 }}>Code: {dispatchData.fromBranchId?.code || dispatchData.fromBranchCode || 'N/A'}</p>
         </div>
 
         <div className="card" style={{ padding: '20px' }}>
@@ -123,7 +123,7 @@ const DispatchDetails = () => {
             <Download size={16} /> DESTINATION BRANCH
           </h3>
           <p style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 4px 0' }}>{dispatchData.toBranchId?.name || dispatchData.toBranch}</p>
-          <p style={{ color: 'var(--muted)', margin: 0 }}>Code: {dispatchData.toBranchId?.code || 'N/A'}</p>
+          <p style={{ color: 'var(--muted)', margin: 0 }}>Code: {dispatchData.toBranchId?.code || dispatchData.toBranchCode || 'N/A'}</p>
         </div>
       </div>
 
@@ -140,8 +140,8 @@ const DispatchDetails = () => {
             <p style={{ fontSize: '16px', margin: 0, fontWeight: '500' }}>{dispatchData.category}</p>
           </div>
           <div>
-            <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '4px', fontWeight: 'bold' }}>DOCKET NO.</p>
-            <p style={{ fontSize: '16px', margin: 0, fontWeight: '500' }}>{dispatchData.docketNumber || 'N/A'}</p>
+            <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '4px', fontWeight: 'bold' }}>TRACKING NO. (MANUAL)</p>
+            <p style={{ fontSize: '16px', margin: 0, fontWeight: '500' }}>{dispatchData.docketNumber || dispatchData.docketNo || dispatchData.docket_no || 'N/A'}</p>
           </div>
         </div>
 
