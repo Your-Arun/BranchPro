@@ -79,7 +79,7 @@ const Profile = () => {
       <p className="subtitle" style={{ marginBottom: '32px' }}>Manage your account settings and data</p>
 
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 400px) 1fr', gap: '32px' }}>
+      <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 400px) 1fr', gap: '32px' }}>
         {/* Sidebar Card */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', height: 'fit-content' }}>
           <div style={{ width: '100px', height: '100px', borderRadius: '50px', backgroundColor: 'rgba(78, 141, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '16px', border: '2px solid var(--primary)' }}>

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Download, Send, User, Package } from 'lucide-react';
+import { LayoutDashboard, Download, Send, User, Package, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Layout = ({ children }) => {
   const { user, dispatches, toasts, setToasts, confirmData, handleConfirm, handleCancel } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const unconfirmedCount = React.useMemo(() => {
     if (!user || user.role === "ADMIN") return 0;
@@ -17,26 +18,43 @@ const Layout = ({ children }) => {
 
   return (
     <div className="app-container">
-      <div className="sidebar">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <div className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
-          <h2 className="title" style={{ fontSize: '24px' }}>BranchFlow <span style={{ color: 'var(--primary)' }}>Pro</span></h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 className="title" style={{ fontSize: '22px' }}>BranchFlow <span style={{ color: 'var(--primary)' }}>Pro</span></h2>
+            <button 
+              className="sidebar-close-btn"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+            >
+              <X size={20} />
+            </button>
+          </div>
           <p className="subtitle">Staff Portal</p>
         </div>
         <nav className="nav-links">
-          <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end>
+          <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end onClick={() => setSidebarOpen(false)}>
             <LayoutDashboard size={20} /> Dashboard
           </NavLink>
-          <NavLink to="/incoming" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/incoming" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <Download size={20} /> Receive 
             {unconfirmedCount > 0 && <span style={{ backgroundColor: 'var(--danger)', color: '#fff', borderRadius: '12px', padding: '2px 8px', fontSize: '12px', marginLeft: 'auto' }}>{unconfirmedCount}</span>}
           </NavLink>
-          <NavLink to="/dispatch" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/dispatch" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <Send size={20} /> Create Dispatch
           </NavLink>
-          <NavLink to="/general-entry" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/general-entry" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <Package size={20} /> General Entry
           </NavLink>
-          <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
             <User size={20} /> Profile
           </NavLink>
         </nav>
@@ -44,10 +62,19 @@ const Layout = ({ children }) => {
 
       <div className="main-content">
         <div className="topbar">
-          <div></div>
+          <button 
+            className="hamburger-btn"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu size={22} />
+          </button>
+          <div className="topbar-brand">
+            <span style={{ fontWeight: '800', fontSize: '18px' }}>BranchFlow <span style={{ color: 'var(--primary)' }}>Pro</span></span>
+          </div>
           <div className="flex items-center gap-2">
-            <span style={{ fontWeight: 'bold' }}>{user?.fullName}</span>
-            <div style={{ width: '40px', height: '40px', borderRadius: '20px', backgroundColor: 'var(--bg)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold' }}>
+            <span className="topbar-username" style={{ fontWeight: 'bold' }}>{user?.fullName}</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '18px', backgroundColor: 'var(--bg)', border: '2px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
               {user?.fullName?.[0]}
             </div>
           </div>

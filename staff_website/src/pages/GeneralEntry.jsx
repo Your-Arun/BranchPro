@@ -101,7 +101,7 @@ const GeneralEntry = () => {
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="general-entry-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <button 
             onClick={() => navigate(-1)} 
@@ -153,7 +153,7 @@ const GeneralEntry = () => {
             {editingId ? 'Edit Entry' : 'Add New Entry'}
           </h3>
           
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <form onSubmit={handleSubmit} className="general-entry-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div className="input-group">
               <label>Item Name *</label>
               <input
@@ -284,7 +284,7 @@ const GeneralEntry = () => {
         ) : (
           <div style={{ display: 'grid', gap: '16px' }}>
             {entries.map((entry) => (
-              <div key={entry._id} style={{ 
+              <div key={entry._id} className="entry-list-item" style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'auto 1fr auto auto auto', 
                 gap: '16px', 

@@ -39,7 +39,7 @@ const Dashboard = () => {
             {unconfirmedIncoming.map(item => (
               <div 
                 key={item._id} 
-                className="card" 
+                className="card pending-delivery-card" 
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-soft)', borderColor: 'var(--warning)', cursor: 'pointer' }}
                 onClick={() => navigate('/details/' + (item._id || item.id))}
               >
@@ -69,7 +69,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
+      <div className="dashboard-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
         <div className="metric-card" style={{ borderBottomColor: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/incoming')}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ padding: '8px', borderRadius: '12px', backgroundColor: 'rgba(78, 141, 255, 0.1)' }}>
@@ -116,7 +116,7 @@ const Dashboard = () => {
         {recentActivity.map(item => (
           <div 
             key={item.id} 
-            className="card" 
+            className="card recent-transit-card" 
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'transform 0.2s', padding: '16px 24px' }}
             onClick={() => navigate('/details/' + (item.id || item._id))}
           >

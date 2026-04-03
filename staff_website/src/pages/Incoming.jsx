@@ -22,7 +22,7 @@ const Incoming = () => {
       <h1 className="title">Dispatches</h1>
       <p className="subtitle" style={{ marginBottom: '32px' }}>Manage all inbound and outbound shipments</p>
       
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', backgroundColor: 'var(--card)', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
+      <div className="tab-bar" style={{ display: 'flex', gap: '8px', marginBottom: '32px', backgroundColor: 'var(--card)', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
         {['ALL', 'SENT', 'PENDING', 'RECEIVED'].map(t => (
           <button 
             key={t}
@@ -48,7 +48,7 @@ const Incoming = () => {
           return (
             <div 
               key={item._id} 
-              className="card" 
+              className="card dispatch-card" 
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
               onClick={() => navigate('/details/' + (item._id || item.id))}
             >
@@ -59,7 +59,7 @@ const Incoming = () => {
                     {item.status}
                   </span>
                 </div>
-                <div style={{ display: 'flex', gap: '24px', color: 'var(--muted)', fontSize: '14px' }}>
+                <div className="dispatch-card-meta" style={{ display: 'flex', gap: '24px', color: 'var(--muted)', fontSize: '14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Send size={16} /> From: {item.fromBranch}
                   </div>

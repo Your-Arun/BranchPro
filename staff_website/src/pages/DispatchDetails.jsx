@@ -69,7 +69,7 @@ const DispatchDetails = () => {
         <ArrowLeft size={18} /> Back
       </button>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+      <div className="details-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
           <h1 className="title" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '28px' }}>
             <Package size={28} color="var(--primary)" />
@@ -109,7 +109,7 @@ const DispatchDetails = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+      <div className="branch-cards-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
         <div className="card" style={{ padding: '20px' }}>
           <h3 style={{ fontSize: '14px', color: 'var(--muted)', fontWeight: 'bold', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Send size={16} /> SENDER BRANCH

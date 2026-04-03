@@ -217,3 +217,258 @@ input, select, textarea { font-family: inherit; outline: none; }
   font-size: 15px;
   margin: 0;
 }
+
+/* ===== MOBILE RESPONSIVE ===== */
+
+/* Hamburger & Close buttons — hidden on desktop */
+.hamburger-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.hamburger-btn:hover {
+  background: var(--bg-soft);
+}
+
+.sidebar-close-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.2s;
+}
+.sidebar-close-btn:hover {
+  color: var(--text);
+}
+
+/* Mobile overlay backdrop */
+.sidebar-overlay {
+  display: none;
+}
+
+/* Topbar brand — hidden on desktop */
+.topbar-brand {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Layout */
+  .app-container {
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Sidebar becomes a fixed slide-in drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  /* Overlay backdrop */
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Show hamburger and close buttons */
+  .hamburger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Main content takes full screen */
+  .main-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Topbar */
+  .topbar {
+    height: 60px;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  /* Show brand name in topbar on mobile */
+  .topbar-brand {
+    display: block;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Hide full name text on small screens */
+  .topbar-username {
+    display: none;
+  }
+
+  /* Page content */
+  .page-content {
+    padding: 16px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  /* Title sizes */
+  .title {
+    font-size: 22px;
+  }
+}
+
+/* ===== DASHBOARD responsive ===== */
+@media (max-width: 768px) {
+  /* Metric cards: 2 columns on mobile */
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  /* Pending delivery cards: stack action button */
+  .pending-delivery-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  /* Recent transit cards */
+  .recent-transit-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+}
+
+/* ===== INCOMING (Dispatches) responsive ===== */
+@media (max-width: 768px) {
+  /* Tab bar — make it scrollable */
+  .tab-bar {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100% !important;
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+
+  /* Dispatch list cards */
+  .dispatch-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+
+  .dispatch-card-meta {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
+
+/* ===== GENERAL ENTRY responsive ===== */
+@media (max-width: 768px) {
+  .general-entry-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .general-entry-header .add-btn {
+    width: 100%;
+    justify-content: center !important;
+  }
+
+  /* Form grid: single column on mobile */
+  .general-entry-form {
+    grid-template-columns: 1fr !important;
+  }
+  .general-entry-form .full-span {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Entry list items */
+  .entry-list-item {
+    grid-template-columns: auto 1fr !important;
+    grid-template-rows: auto auto !important;
+  }
+  .entry-list-item .entry-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .entry-list-item .entry-badge {
+    display: none !important;
+  }
+}
+
+/* ===== PROFILE responsive ===== */
+@media (max-width: 768px) {
+  .profile-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== DISPATCH DETAILS responsive ===== */
+@media (max-width: 768px) {
+  .details-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .branch-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== Card & form tweaks for mobile ===== */
+@media (max-width: 480px) {
+  .card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+  .metric-card {
+    padding: 16px;
+  }
+  .btn-primary, .btn-secondary {
+    font-size: 14px;
+    padding: 12px 14px;
+  }
+}
+
