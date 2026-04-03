@@ -191,24 +191,19 @@ export const forgotPassword = async (req, res, next) => {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(404).json({ message: "There is no user with that email address." });
 
-    const resetToken = crypto.randomBytes(32).toString("hex");
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
     // Hash token and set to resetPasswordToken field
-    user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.resetPasswordToken = crypto.createHash("sha256").update(otp).digest("hex");
     user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
     
     await user.save();
 
-    // Create reset url (this should point to the frontend application)
-    // For local dev it usually runs on port 5173 or the origin of request
-    const origin = req.headers.origin || "http://localhost:5173";
-    const resetUrl = `${origin}/reset-password/${resetToken}`;
-
-    console.log("Reset URL:", resetUrl); // Log for easy local testing
+    console.log("Your OTP is:", otp); // Log for easy local testing
 
     try {
-      await sendPasswordResetEmail(user.email, resetUrl);
-      res.status(200).json({ message: "Password reset link sent to email!" });
+      await sendPasswordResetEmail(user.email, otp);
+      res.status(200).json({ message: "OTP sent to your email!" });
     } catch (err) {
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
@@ -222,24 +217,27 @@ export const forgotPassword = async (req, res, next) => {
 
 export const resetPassword = async (req, res, next) => {
   try {
+    const { email, otp, password } = req.body;
+
+    if (!email || !otp || !password) {
+      return res.status(400).json({ message: "Please provide email, OTP, and new password" });
+    }
+
     // Get hashed token
-    const resetPasswordToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
+    const resetPasswordToken = crypto.createHash("sha256").update(otp).digest("hex");
 
     const user = await User.findOne({
+      email: email.toLowerCase(),
       resetPasswordToken,
       resetPasswordExpire: { $gt: Date.now() }
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    if (!req.body.password) {
-      return res.status(400).json({ message: "Please provide a new password" });
+      return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
     // Set new password
-    user.password = req.body.password;
+    user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     

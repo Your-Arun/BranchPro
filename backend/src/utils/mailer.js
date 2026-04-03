@@ -82,18 +82,17 @@ export const sendStatusUpdateEmail = async (
 };
 
 // ─── Forgot Password Email ─────────────────────────────
-export const sendPasswordResetEmail = async (email, resetUrl) => {
-  const subject = `🔐 Password Reset Request for BranchFlow Pro`;
+export const sendPasswordResetEmail = async (email, otp) => {
+  const subject = `🔐 Password Reset OTP for BranchFlow Pro`;
   
   const html = `
     <div style="font-family:Segoe UI;padding:20px;max-width:600px;margin:0 auto;background-color:#f9f9f9;border-radius:10px;">
-      <h2 style="color:#4e8dff;">Password Reset</h2>
-      <p style="font-size:16px;">You requested to reset your password. Please click the button below to set a new password.</p>
+      <h2 style="color:#4e8dff;">Password Reset OTP</h2>
+      <p style="font-size:16px;">You requested to reset your password. Please use the following 6-digit OTP to set a new password.</p>
       <div style="text-align:center;margin:30px 0;">
-        <a href="${resetUrl}" style="background-color:#4e8dff;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;font-size:16px;display:inline-block;">Reset Password</a>
+        <span style="background-color:#4e8dff;color:white;padding:12px 32px;border-radius:6px;font-weight:bold;font-size:24px;letter-spacing:4px;display:inline-block;">${otp}</span>
       </div>
-      <p style="font-size:14px;color:#666;">If you did not request this, please ignore this email. This link will expire in 10 minutes.</p>
-      <p style="font-size:12px;color:#999;margin-top:20px;">If the button doesn't work, copy and paste this link: ${resetUrl}</p>
+      <p style="font-size:14px;color:#666;">If you did not request this, please ignore this email. This OTP will expire in 10 minutes.</p>
     </div>
   `;
 

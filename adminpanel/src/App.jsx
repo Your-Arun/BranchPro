@@ -24,8 +24,16 @@ export default function App() {
     const raw = localStorage.getItem("admin_profile");
     return raw ? JSON.parse(raw) : null;
   });
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ newPassword: "", confirmPassword: "" });
   const [company, setCompany] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isForgotPass, setIsForgotPass] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1: Email, 2: OTP
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [forgotNewPass, setForgotNewPass] = useState("");
+  const [forgotConfirmPass, setForgotConfirmPass] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -132,6 +140,41 @@ export default function App() {
     }
   };
 
+  const onForgotPassword = async (e) => {
+    e.preventDefault();
+    try {
+      setError("");
+      setLoading(true);
+      if (forgotStep === 1) {
+        const data = await request("/auth/forgot-password", { method: "POST", body: { email: forgotEmail } });
+        toast(data.message || "OTP sent to your email!");
+        setForgotStep(2);
+      } else {
+        if (forgotNewPass !== forgotConfirmPass) {
+          throw new Error("Passwords do not match");
+        }
+        if (forgotNewPass.length < 6) {
+          throw new Error("Password must be at least 6 characters");
+        }
+        const data = await request("/auth/reset-password", { 
+          method: "POST", 
+          body: { email: forgotEmail, otp: forgotOtp, password: forgotNewPass } 
+        });
+        toast(data.message || "Password updated. You can now login!");
+        setIsForgotPass(false);
+        setForgotStep(1);
+        setForgotEmail("");
+        setForgotOtp("");
+        setForgotNewPass("");
+        setForgotConfirmPass("");
+      }
+    } catch (e2) {
+      setError(e2.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const saveSession = (data) => {
     setToken(data.token);
     setProfile(data);
@@ -161,6 +204,28 @@ export default function App() {
       await loadAdminData();
     } catch (e2) {
       setError(e2.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      return toast("Passwords do not match", "error");
+    }
+    if (passwordForm.newPassword.length < 6) {
+      return toast("Password must be at least 6 characters", "error");
+    }
+    try {
+      setError("");
+      setLoading(true);
+      await request("/auth/me", { method: "PUT", token, body: { password: passwordForm.newPassword } });
+      toast("Password changed successfully!");
+      setShowPasswordModal(false);
+      setPasswordForm({ newPassword: "", confirmPassword: "" });
+    } catch (e2) {
+      toast(e2.message || "Failed to change password", "error");
     } finally {
       setLoading(false);
     }
@@ -415,6 +480,28 @@ export default function App() {
                 Already have an account? Login
               </button>
             </form>
+          ) : isForgotPass ? (
+            <form className="form" onSubmit={onForgotPassword}>
+              <h1>{forgotStep === 1 ? 'Forgot Password' : 'Reset Password'}</h1>
+              <p>{forgotStep === 1 ? 'Enter your admin email to receive a 6-digit OTP' : 'Enter the 6-digit OTP and your new password'}</p>
+              
+              {forgotStep === 1 ? (
+                <input type="email" placeholder="Email Address" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required />
+              ) : (
+                <>
+                  <input type="text" placeholder="6-Digit OTP" value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value)} maxLength="6" style={{ letterSpacing: '4px', textAlign: 'center', fontWeight: 'bold' }} required />
+                  <input type="password" placeholder="New Password" value={forgotNewPass} onChange={(e) => setForgotNewPass(e.target.value)} required />
+                  <input type="password" placeholder="Confirm New Password" value={forgotConfirmPass} onChange={(e) => setForgotConfirmPass(e.target.value)} required />
+                </>
+              )}
+              
+              <button type="submit" disabled={loading}>
+                {loading ? <div className="loading-dots"><div className="dot"></div><div className="dot"></div><div className="dot"></div></div> : (forgotStep === 1 ? "Send OTP" : "Set New Password")}
+              </button>
+              <button type="button" className="secondary" style={{ marginTop: '8px', width: '100%', border: 'none', background: 'transparent', textDecoration: 'underline' }} onClick={() => { setIsForgotPass(false); setForgotStep(1); }}>
+                Back to Login
+              </button>
+            </form>
           ) : (
             <form className="form" onSubmit={onLogin}>
               <h1>BranchFlow Admin</h1>
@@ -425,6 +512,9 @@ export default function App() {
                 <div className="pass-toggle" onClick={() => setShowAuthPass(!showAuthPass)}>
                   <i data-lucide={showAuthPass ? "eye-off" : "eye"} style={{ width: '20px' }}></i>
                 </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-10px', marginBottom: '10px' }}>
+                <button type="button" onClick={() => setIsForgotPass(true)} style={{ background: 'transparent', color: 'var(--primary)', border: 'none', padding: 0, fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}>Forgot Password?</button>
               </div>
               <button type="submit" disabled={loading}>
                 {loading ? <div className="loading-dots"><div className="dot"></div><div className="dot"></div><div className="dot"></div></div> : "Login"}
@@ -492,10 +582,33 @@ export default function App() {
             <small><i data-lucide="user" style={{ width: '12px', verticalAlign: 'middle', marginRight: '4px' }}></i> {profile.fullName} (Admin)</small>
           </div>
         </div>
-        <button className="danger" onClick={onLogout} style={{ padding: '10px 20px', borderRadius: '12px' }}>
-          <i data-lucide="log-out" style={{ width: '18px' }}></i> Logout
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="secondary" onClick={() => setShowPasswordModal(true)} style={{ padding: '10px 16px', borderRadius: '12px' }}>
+            <i data-lucide="key" style={{ width: '18px' }}></i> Change Password
+          </button>
+          <button className="danger" onClick={onLogout} style={{ padding: '10px 20px', borderRadius: '12px' }}>
+            <i data-lucide="log-out" style={{ width: '18px' }}></i> Logout
+          </button>
+        </div>
       </header>
+
+      {showPasswordModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '400px', backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0 }}><i data-lucide="key" style={{ color: 'var(--primary)', marginRight: '8px' }}></i> Change Password</h3>
+              <button className="secondary" onClick={() => setShowPasswordModal(false)} style={{ padding: '4px' }}><i data-lucide="x" style={{ width: '20px' }}></i></button>
+            </div>
+            <form onSubmit={onChangePasswordSubmit} className="form">
+              <input type="password" placeholder="New Password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm(s => ({ ...s, newPassword: e.target.value }))} required />
+              <input type="password" placeholder="Confirm New Password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm(s => ({ ...s, confirmPassword: e.target.value }))} required />
+              <button type="submit" disabled={loading} style={{ marginTop: '10px' }}>
+                {loading ? "Changing..." : "Update Password"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {error ? <div className="error" style={{ marginBottom: "20px" }}>{error}</div> : null}
 

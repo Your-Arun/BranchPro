@@ -11,6 +11,6 @@ router.post("/admin-signup", adminRegister); // New Admin
 router.get("/me", protect, getProfile);
 router.put("/me", protect, updateProfile);
 router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
+router.post("/reset-password", resetPassword);
 
 export default router;
