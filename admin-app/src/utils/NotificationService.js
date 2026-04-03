@@ -2,40 +2,21 @@ import * as Device from "expo-device";
 import { Platform } from "react-native";
 import Toast from "react-native-toast-message";
 import Constants from "expo-constants";
+import * as Notifications from "expo-notifications";
 
-// Check if we're running in Expo Go
-const isExpoGo = !Device.isDevice || __DEV__;
-
-// Set up notification handler for mobile devices (only if not in Expo Go)
-if (Device.isDevice && !isExpoGo) {
-  import("expo-notifications").then(({ default: Notifications }) => {
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-      }),
-    });
-  }).catch((error) => {
-    console.log("expo-notifications not available:", error);
-  });
-}
+// Configure notification handler - this works in Expo Go too for local notifications
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 // Local notification scheduling function
 export const scheduleLocalNotification = async (title, body, data = {}, seconds = 1) => {
-  if (!Device.isDevice) {
-    console.log("Local notifications not available on simulator/emulator");
-    return;
-  }
-
-  if (isExpoGo) {
-    console.log("Local notifications not available in Expo Go");
-    return;
-  }
-
   try {
-    const Notifications = await import("expo-notifications");
-    await Notifications.default.scheduleNotificationAsync({
+    await Notifications.scheduleNotificationAsync({
       content: {
         title: title,
         body: body,
@@ -50,19 +31,8 @@ export const scheduleLocalNotification = async (title, body, data = {}, seconds 
 
 // Show immediate notification
 export const showImmediateNotification = async (title, body, data = {}) => {
-  if (!Device.isDevice) {
-    console.log("Immediate notifications not available on simulator/emulator");
-    return;
-  }
-
-  if (isExpoGo) {
-    console.log("Immediate notifications not available in Expo Go");
-    return;
-  }
-
   try {
-    const Notifications = await import("expo-notifications");
-    await Notifications.default.scheduleNotificationAsync({
+    await Notifications.scheduleNotificationAsync({
       content: {
         title: title,
         body: body,
@@ -80,24 +50,13 @@ export const showImmediateNotification = async (title, body, data = {}) => {
 export const registerForPushNotificationsAsync = async () => {
   let token;
 
-  if (isExpoGo) {
-    console.log("Running in Expo Go - remote push notifications disabled");
-    Toast.show({
-      type: "info",
-      text1: "Expo Go Limitation",
-      text2: "Remote push notifications require a development build. Use 'expo run:android' or 'expo run:ios' for full functionality.",
-      position: "bottom"
-    });
-    
-    // For development, we can still use local notifications
-    return null;
-  }
+  // Check if we're running in Expo Go for warning purposes only
+  const isExpoGo = Constants.appOwnership === 'expo';
 
   if (Platform.OS === "android") {
-    const Notifications = await import("expo-notifications");
-    await Notifications.default.setNotificationChannelAsync("default", {
+    await Notifications.setNotificationChannelAsync("default", {
       name: "default",
-      importance: Notifications.default.AndroidImportance.HIGH,
+      importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#FF231F7C",
       sound: "default",
@@ -105,18 +64,11 @@ export const registerForPushNotificationsAsync = async () => {
   }
 
   if (Device.isDevice) {
-    const Notifications = await import("expo-notifications");
-    const { status: existingStatus } = await Notifications.default.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== "granted") {
-      Toast.show({
-        type: "info",
-        text1: "Push Notifications",
-        text2: "Enable notifications to receive shipment updates and alerts.",
-        position: "bottom"
-      });
-      const { status } = await Notifications.default.requestPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
 
@@ -124,44 +76,28 @@ export const registerForPushNotificationsAsync = async () => {
       Toast.show({
         type: "error",
         text1: "Permission Denied",
-        text2: "You won't receive shipment notifications. Enable in Settings > Notifications.",
+        text2: "You won't receive shipment notifications. Enable in Settings.",
         position: "bottom"
       });
       return null;
     }
 
     try {
+      // Remote Push Tokens are tricky in Expo Go, but local ones always work.
+      // We try to get the token anyway.
       const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? "f2513b70-b448-4c5b-9946-e1b532541f61";
-      const Notifications = await import("expo-notifications");
-      token = (await Notifications.default.getExpoPushTokenAsync({
+      token = (await Notifications.getExpoPushTokenAsync({
         projectId,
       })).data;
       console.log("Expo Push Token:", token);
-      
-      Toast.show({
-        type: "success",
-        text1: "Notifications Enabled",
-        text2: "You'll receive shipment updates and alerts.",
-        position: "bottom"
-      });
     } catch (e) {
-      console.log("Failed to get push token", e);
-      // Suppress error in Expo Go/Dev mode as it's expected to fail
-      if (!isExpoGo) {
-        Toast.show({
-          type: "error",
-          text1: "Notification Error",
-          text2: "Unable to register for push notifications.",
-          position: "bottom"
-        });
+      console.log("Remote push token registration failed (Expected in some dev environments):", e.message);
+      if (isExpoGo) {
+         console.log("Push notifications in Expo Go require specific configuration. Local notifications will still work.");
       }
     }
   } else {
-    Toast.show({ 
-      type: "info", 
-      text1: "Simulator/Emulator", 
-      text2: "Push notifications require a physical device." 
-    });
+    console.log("Physical device required for remote push notifications.");
   }
 
   return token;
@@ -172,19 +108,11 @@ export const handleNotificationResponse = (response) => {
   const data = response.notification.request.content.data;
   console.log("Notification tapped:", data);
   
-  // You can navigate to specific screens based on notification data
-  // For example, navigate to dispatch details if it's a dispatch notification
   if (data.type === "dispatch_update") {
-    // Navigate to dispatch details screen
     console.log("Navigating to dispatch details:", data.dispatchId);
   }
 };
 
-// Set up notification response handler (only if not in Expo Go)
-if (Device.isDevice && !isExpoGo) {
-  import("expo-notifications").then(({ default: Notifications }) => {
-    Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
-  }).catch((error) => {
-    console.log("expo-notifications not available:", error);
-  });
-}
+// Add listener for notification responses
+Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
+

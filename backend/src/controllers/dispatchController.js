@@ -3,6 +3,7 @@ import { Company } from "../models/Company.js";
 import { Dispatch } from "../models/Dispatch.js";
 import { User } from "../models/User.js";
 import { sendDispatchEmail, sendStatusUpdateEmail } from "../utils/mailer.js";
+import { sendPushNotification } from "../utils/pushService.js";
 
 const statusMap = {
   ALL: null,
@@ -260,26 +261,32 @@ export const createDispatch = async (req, res, next) => {
       .populate("toBranchId", "name code")
       .lean();
 
-    // Trigger email alert in the background
+    // Trigger alerts in the background
     try {
-      const destUsers = await User.find({ branchId: toBranchId }).select("email fullName").lean();
+      const destUsers = await User.find({ branchId: toBranchId }).select("email fullName pushToken").lean();
       const destEmails = destUsers.map(u => u.email).filter(Boolean);
+      const destTokens = destUsers.map(u => u.pushToken).filter(Boolean);
       
-      // Only include destination branch staff as recipients
       const allRecipients = Array.from(new Set([...destEmails])).filter(Boolean);
 
-      console.log(`[Email Dispatch] Target Branch: ${toBranchId}, Found ${destUsers.length} staff members.`);
-      console.log(`[Email Dispatch] Recipients: ${allRecipients.join(', ')}`);
+      console.log(`[Alert Dispatch] Target Branch: ${toBranchId}, Found ${destUsers.length} staff members.`);
 
       if (allRecipients.length > 0) {
         sendDispatchEmail(allRecipients, populated, populated.fromBranchId?.name, populated.toBranchId?.name).catch(err => {
             console.error('[Email Dispatch] Async Error:', err.message);
         });
-      } else {
-        console.warn(`[Email Dispatch] No recipients found at target branch. No email sent.`);
+      }
+
+      if (destTokens.length > 0) {
+        sendPushNotification(
+          destTokens,
+          "New Shipment Created",
+          `📦 #${populated.trackingId} is coming from ${populated.fromBranchId?.name || 'Sender Hub'}`,
+          { type: 'dispatch_update', dispatchId: populated._id }
+        ).catch(err => console.error('[Push Dispatch] Async Error:', err.message));
       }
     } catch (err) {
-      console.error('[Email Dispatch] Trigger Error:', err.message);
+      console.error('[Alert Dispatch] Trigger Error:', err.message);
     }
 
     res.status(201).json(toDto(populated));
@@ -315,14 +322,14 @@ export const updateDispatchStatus = async (req, res, next) => {
       return res.status(404).json({ message: "Dispatch not found or unauthorized" });
     }
 
-    // Send email notification to both branches on status change
+    // Send alerts to both branches on status change
     try {
       const fromBranchId = updated.fromBranchId?._id || doc.fromBranchId;
       const toBranchId = updated.toBranchId?._id || doc.toBranchId;
 
       const [fromStaff, toStaff] = await Promise.all([
-        User.find({ branchId: fromBranchId }).select("email").lean(),
-        User.find({ branchId: toBranchId }).select("email").lean()
+        User.find({ branchId: fromBranchId }).select("email pushToken").lean(),
+        User.find({ branchId: toBranchId }).select("email pushToken").lean()
       ]);
 
       const allEmails = Array.from(new Set([
@@ -330,7 +337,12 @@ export const updateDispatchStatus = async (req, res, next) => {
         ...toStaff.map(u => u.email)
       ])).filter(Boolean);
 
-      console.log(`[Status Update Email] Status: ${status}, Recipients: ${allEmails.join(', ')}`);
+      const allTokens = Array.from(new Set([
+        ...fromStaff.map(u => u.pushToken),
+        ...toStaff.map(u => u.pushToken)
+      ])).filter(Boolean);
+
+      console.log(`[Status Update Alert] Status: ${status}, Recipients: ${allEmails.length} emails, ${allTokens.length} push tokens`);
 
       if (allEmails.length > 0) {
         sendStatusUpdateEmail(
@@ -342,8 +354,25 @@ export const updateDispatchStatus = async (req, res, next) => {
           req.user?.fullName
         ).catch(err => console.error('[Status Update Email] Error:', err.message));
       }
-    } catch (emailErr) {
-      console.error('[Status Update Email] Trigger Error:', emailErr.message);
+
+      if (allTokens.length > 0) {
+        const statusMsg = {
+          "SENT": "Shipment is now in transit",
+          "IN_TRANSIT": "Shipment is moving to destination",
+          "RECEIVED": "Shipment has been delivered ✅",
+          "PENDING": "Shipment is waiting for processing",
+          "OVERDUE": "⚠️ Shipment is overdue"
+        };
+
+        sendPushNotification(
+          allTokens,
+          `Shipment Status: ${status}`,
+          `📦 #${updated.trackingId}: ${statusMsg[status] || 'Status updated'}`,
+          { type: 'dispatch_update', dispatchId: updated._id }
+        ).catch(err => console.error('[Status Update Push] Error:', err.message));
+      }
+    } catch (alertErr) {
+      console.error('[Status Update Alert] Trigger Error:', alertErr.message);
     }
 
     res.json(toDto(updated));

@@ -8,6 +8,7 @@ import { colors } from "../theme/colors";
 import { BranchesScreen } from "../screens/BranchesScreen";
 import { DashboardScreen } from "../screens/DashboardScreen";
 import { DispatchDetailsScreen } from "../screens/DispatchDetailsScreen";
+import { BranchDetailsScreen } from "../screens/BranchDetailsScreen";
 import { ReportsScreen } from "../screens/ReportsScreen";
 import { UsersSettingsScreen } from "../screens/UsersSettingsScreen";
 import { LoginScreen } from "../screens/LoginScreen";
@@ -83,6 +84,11 @@ export const RootNavigator = () => {
             <Stack.Screen
               name="DispatchDetails"
               component={DispatchDetailsScreen}
+              options={{ presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="BranchDetails"
+              component={BranchDetailsScreen}
               options={{ presentation: "modal" }}
             />
           </>

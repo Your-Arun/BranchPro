@@ -35,7 +35,7 @@ const BranchSkeleton = () => (
   </View>
 );
 
-export const BranchesScreen = () => {
+export const BranchesScreen = ({ navigation }) => {
   const { loading, error, branches, refresh } = useAppData();
   const [search, setSearch] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
@@ -199,7 +199,7 @@ export const BranchesScreen = () => {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
         {filtered.map((b) => (
-          <View key={b._id} style={styles.card}>
+          <Pressable key={b._id} style={styles.card} onPress={() => navigation.navigate("BranchDetails", { id: b._id })}>
             <View style={styles.cardTop}>
               <View style={[styles.iconCircle, { marginRight: 12 }]}>
                 <Ionicons name="business" size={22} color={colors.primary} />
@@ -248,7 +248,7 @@ export const BranchesScreen = () => {
                 <Ionicons name="trash-outline" size={16} color={colors.danger} />
               </Pressable>
             </View>
-          </View>
+          </Pressable>
         ))}
 
         {filtered.length === 0 && !loading && (

@@ -1,12 +1,16 @@
 import { Skeleton } from "../components/Skeleton";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View, ScrollView,} from "react-native";
+import { StyleSheet, Text, View, ScrollView, Pressable } from "react-native";
 import { colors } from "../theme/colors";
 import { useAppData } from "../utils/AppDataContext";
 
-const StatBox = ({ label, value, icon, color, loading }) => (
-  <View style={[styles.statBox, { borderTopColor: loading ? colors.border : color, borderTopWidth: 3 }]}>
+const StatBox = ({ label, value, icon, color, loading, onPress }) => (
+  <Pressable 
+    onPress={onPress} 
+    style={[styles.statBox, { borderTopColor: loading ? colors.border : color, borderTopWidth: 3 }]}
+    disabled={loading}
+  >
     <View style={styles.statHeader}>
       <View style={[styles.iconCircle, { backgroundColor: loading ? `${colors.border}33` : `${color}15` }]}>
         {loading ? <Skeleton width={20} height={20} radius={10} /> : <Ionicons name={icon} size={22} color={color} />}
@@ -25,7 +29,7 @@ const StatBox = ({ label, value, icon, color, loading }) => (
         </>
       )}
     </View>
-  </View>
+  </Pressable>
 );
 
 const DashboardSkeleton = () => (
@@ -41,7 +45,7 @@ const DashboardSkeleton = () => (
   </View>
 );
 
-export const DashboardScreen = () => {
+export const DashboardScreen = ({ navigation }) => {
   const { loading, error, company, branches, users, dispatches, refresh } = useAppData();
 
   // Null safety & default values added
@@ -75,25 +79,25 @@ export const DashboardScreen = () => {
           <Text style={styles.companyName}>{company?.name || "BranchFlow Enterprise"}</Text>
           
           <View style={styles.heroFooter}>
-            <View style={styles.heroStat}>
+            <Pressable style={styles.heroStat} onPress={() => navigation.navigate("Branches")}>
               <Text style={styles.heroStatVal}>{totalBranches}</Text>
               <Text style={styles.heroStatLab}>Branches</Text>
-            </View>
+            </Pressable>
             <View style={styles.divider} />
-            <View style={styles.heroStat}>
+            <Pressable style={styles.heroStat} onPress={() => navigation.navigate("Staff")}>
               <Text style={styles.heroStatVal}>{totalStaff}</Text>
               <Text style={styles.heroStatLab}>Staff Members</Text>
-            </View>
+            </Pressable>
           </View>
         </View>
 
         {/* --- NETWORK STATUS GRID --- */}
         <Text style={styles.sectionTitle}>Network Status</Text>
         <View style={styles.statsGrid}>
-          <StatBox label="Active Shipments" value={activeDispatches} icon="analytics" color={colors.primary} />
-          <StatBox label="Pending Early" value={pendingDispatches} icon="time" color={colors.warning} />
-          <StatBox label="Overdue" value={overdueDispatches} icon="alert-circle" color={colors.danger} />
-          <StatBox label="Delivered" value={deliveredDispatches} icon="checkmark-done" color={colors.success} />
+          <StatBox label="Active Shipments" value={activeDispatches} icon="analytics" color={colors.primary} onPress={() => navigation.navigate("Reports")} />
+          <StatBox label="Pending Early" value={pendingDispatches} icon="time" color={colors.warning} onPress={() => navigation.navigate("Reports")} />
+          <StatBox label="Overdue" value={overdueDispatches} icon="alert-circle" color={colors.danger} onPress={() => navigation.navigate("Reports")} />
+          <StatBox label="Delivered" value={deliveredDispatches} icon="checkmark-done" color={colors.success} onPress={() => navigation.navigate("Reports")} />
         </View>
 
         {/* --- RECENT HUBS LIST --- */}
@@ -105,8 +109,9 @@ export const DashboardScreen = () => {
           
           {branches && branches.length > 0 ? (
             branches.slice(0, 3).map((b, index) => (
-              <View 
+              <Pressable 
                 key={b._id} 
+                onPress={() => navigation.navigate("BranchDetails", { id: b._id })}
                 style={[
                   styles.hubItem, 
                   // Last item se border-bottom hata diya for clean look
@@ -121,7 +126,7 @@ export const DashboardScreen = () => {
                   </View>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-              </View>
+              </Pressable>
             ))
           ) : (
             <Text style={styles.emptyText}>No branches created yet.</Text>

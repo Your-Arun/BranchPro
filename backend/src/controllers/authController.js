@@ -249,3 +249,19 @@ export const resetPassword = async (req, res, next) => {
   }
 };
 
+export const updatePushToken = async (req, res, next) => {
+  try {
+    const { pushToken } = req.body;
+    if (!pushToken) return res.status(400).json({ message: "pushToken is required" });
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.pushToken = pushToken;
+    await user.save();
+
+    res.status(200).json({ message: "Push token updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -18,6 +18,9 @@ export const ProfileScreen = () => {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "" });
 
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ newPassword: "", confirmPassword: "" });
+
   const openEdit = () => {
     setForm({ name: company?.name || "", phone: company?.phone || "", email: company?.email || "" });
     setEditVisible(true);
@@ -35,6 +38,26 @@ export const ProfileScreen = () => {
       Toast.show({ type: "success", text1: "Success", text2: "Company details updated!" });
     } catch (e) {
       Toast.show({ type: "error", text1: "Error", text2: e.response?.data?.message || "Update failed" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      return Toast.show({ type: "error", text1: "Validation", text2: "Passwords do not match." });
+    }
+    if (passwordForm.newPassword.length < 6) {
+      return Toast.show({ type: "error", text1: "Validation", text2: "Password needs 6+ characters." });
+    }
+    try {
+      setSaving(true);
+      await api.put("/auth/me", { password: passwordForm.newPassword });
+      Toast.show({ type: "success", text1: "Success", text2: "Password changed successfully!" });
+      setPasswordVisible(false);
+      setPasswordForm({ newPassword: "", confirmPassword: "" });
+    } catch (e) {
+      Toast.show({ type: "error", text1: "Error", text2: e.response?.data?.message || "Failed to update password." });
     } finally {
       setSaving(false);
     }
@@ -117,6 +140,16 @@ export const ProfileScreen = () => {
 
           <View style={styles.divider} />
 
+          <Pressable style={styles.actionRow} onPress={() => setPasswordVisible(true)}>
+            <View style={[styles.actionIcon, { backgroundColor: `${colors.primary}15`, marginRight: 14 }]}>
+              <Ionicons name="key-outline" size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.actionText}>Change Password</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+          </Pressable>
+
+          <View style={styles.divider} />
+
           <Pressable style={styles.actionRow} onPress={handleDeleteCompany}>
             <View style={[styles.actionIcon, { backgroundColor: `${colors.danger}15`, marginRight: 14 }]}>
               <Ionicons name="trash-outline" size={20} color={colors.danger} />
@@ -154,6 +187,31 @@ export const ProfileScreen = () => {
 
                 <Pressable style={styles.saveBtn} onPress={handleUpdate} disabled={saving}>
                   {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveTxt}>Save Changes</Text>}
+                </Pressable>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ── Change Password Modal ── */}
+        <Modal animationType="slide" transparent visible={passwordVisible} onRequestClose={() => setPasswordVisible(false)}>
+          <View style={styles.overlay}>
+            <View style={styles.sheet}>
+              <View style={styles.sheetHeader}>
+                <Text style={styles.sheetTitle}>Change Password</Text>
+                <Pressable onPress={() => setPasswordVisible(false)}>
+                  <Ionicons name="close-circle" size={28} color={colors.muted} />
+                </Pressable>
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Text style={styles.fieldLabel}>New Password</Text>
+                <TextInput style={styles.input} value={passwordForm.newPassword} onChangeText={(t) => setPasswordForm(f => ({ ...f, newPassword: t }))} placeholder="Enter new password" placeholderTextColor={colors.muted} secureTextEntry />
+
+                <Text style={styles.fieldLabel}>Confirm New Password</Text>
+                <TextInput style={styles.input} value={passwordForm.confirmPassword} onChangeText={(t) => setPasswordForm(f => ({ ...f, confirmPassword: t }))} placeholder="Confirm new password" placeholderTextColor={colors.muted} secureTextEntry />
+
+                <Pressable style={styles.saveBtn} onPress={handleChangePassword} disabled={saving}>
+                  {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveTxt}>Update Password</Text>}
                 </Pressable>
               </ScrollView>
             </View>

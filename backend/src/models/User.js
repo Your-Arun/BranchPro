@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: false },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: false },
     avatarUrl: { type: String, default: "" },
+    pushToken: { type: String, default: "" },
     resetPasswordToken: String,
     resetPasswordExpire: Date
   },

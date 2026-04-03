@@ -1,4 +1,4 @@
-import { loginUser, registerUser, adminRegister, getProfile, updateProfile, forgotPassword, resetPassword } from "../controllers/authController.js";
+import { loginUser, registerUser, adminRegister, getProfile, updateProfile, forgotPassword, resetPassword, updatePushToken } from "../controllers/authController.js";
 import { protect } from "../middleware/auth.js";
 import { Router } from "express";
 
@@ -12,5 +12,6 @@ router.get("/me", protect, getProfile);
 router.put("/me", protect, updateProfile);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+router.post("/push-token", protect, updatePushToken);
 
 export default router;

@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { useState } from "react";
+import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Skeleton } from "../components/Skeleton";
 import { ScreenLayout } from "../components/ScreenLayout";
@@ -7,16 +8,21 @@ import { colors } from "../theme/colors";
 import { useAppData } from "../utils/AppDataContext";
 
 
-const StatRow = ({ label, value, icon, color, loading }) => (
-  <View style={styles.statRow}>
+const StatRow = ({ label, value, icon, color, loading, onPress, isActive }) => (
+  <Pressable 
+    onPress={onPress} 
+    style={[styles.statRow, isActive && { backgroundColor: `${color}10`, borderRadius: 12, paddingHorizontal: 8 }]}
+    disabled={!onPress || loading}
+  >
     <View style={[styles.statIcon, { backgroundColor: loading ? `${colors.border}33` : `${color}15` }]}>
       {loading ? <Skeleton width={18} height={18} radius={9} /> : <Ionicons name={icon} size={20} color={color} />}
     </View>
     <View style={{ flex: 1, marginLeft: 10 }}>
-        {loading ? <Skeleton width="60%" height={16} /> : <Text style={styles.statLabel}>{label}</Text>}
+        {loading ? <Skeleton width="60%" height={16} /> : <Text style={[styles.statLabel, isActive && { fontWeight: "800", color }]}>{label}</Text>}
     </View>
     {loading ? <Skeleton width={40} height={24} /> : <Text style={[styles.statValue, { color }]}>{value}</Text>}
-  </View>
+    {onPress && <Ionicons name="chevron-forward" size={14} color={colors.muted} style={{ marginLeft: 8 }} />}
+  </Pressable>
 );
 
 const ReportsSkeleton = () => (
@@ -30,8 +36,14 @@ const ReportsSkeleton = () => (
   </View>
 );
 
-export const ReportsScreen = () => {
+export const ReportsScreen = ({ navigation }) => {
   const { loading, error, reports, branches, users, dispatches } = useAppData();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+
+  const toggleFilter = (status) => {
+    setStatusFilter(prev => prev === status ? null : status);
+  };
 
   // Compute live stats from existing state (fast, no extra API call)
   const totalBranches = branches?.length || 0;
@@ -48,10 +60,22 @@ export const ReportsScreen = () => {
   // Branch performance: count dispatches per branch
   const branchStats = (branches || []).map(b => {
     const count = dispatches?.filter(d => d.fromBranch === b.name || d.toBranch === b.name).length || 0;
-    return { name: b.name, count };
+    return { _id: b._id, name: b.name, count };
   }).sort((a, b) => b.count - a.count);
 
   const maxCount = branchStats[0]?.count || 1;
+
+  const filteredDispatches = (dispatches || []).filter(d => {
+    const matchesSearch = !searchQuery || 
+      d.trackingId?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      d.docketNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.fromBranch?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.toBranch?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = !statusFilter || d.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   if ((branches?.length === 0 || !branches) && loading) {
     return (
@@ -86,55 +110,69 @@ export const ReportsScreen = () => {
           </View>
         </View>
 
-        {/* ── Dispatch Status Breakdown ── */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Dispatch Status Breakdown</Text>
-          <StatRow label="Sent / Ready" value={sent} icon="paper-plane" color={colors.primary} />
-          <StatRow label="In Transit" value={inTransit} icon="navigate" color="#a855f7" />
-          <StatRow label="Received" value={received} icon="checkmark-circle" color={colors.success} />
-          <StatRow label="Pending" value={pending} icon="time" color={colors.warning} />
-          <StatRow label="Overdue" value={overdue} icon="alert-circle" color={colors.danger} />
-        </View>
-
-        {/* ── Branch Performance ── */}
+ {/* ── Branch Performance ── */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Branch Activity</Text>
           {branchStats.length === 0 ? (
             <Text style={styles.emptyText}>No branch data yet</Text>
           ) : (
             branchStats.map((b) => (
-              <View key={b.name} style={styles.barRow}>
+              <Pressable key={b._id} style={styles.barRow} onPress={() => navigation.navigate("BranchDetails", { id: b._id })}>
                 <Text style={[styles.barName, { marginRight: 10 }]}>{b.name}</Text>
                 <View style={styles.barTrack}>
                   <View style={[styles.barFill, { width: `${Math.max(4, (b.count / maxCount) * 100)}%` }]} />
                 </View>
                 <Text style={[styles.barCount, { marginLeft: 10 }]}>{b.count}</Text>
-              </View>
+              </Pressable>
             ))
           )}
         </View>
 
-        {/* ── Users Summary ── */}
+        {/* ── Dispatch Status Breakdown ── */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Team Breakdown</Text>
-          <StatRow label="Staff Members" value={totalStaff} icon="people" color={colors.primary} />
-          <StatRow label="Admins" value={totalAdmins} icon="shield-checkmark" color={colors.success} />
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <Text style={styles.cardTitle}>Dispatch Status Breakdown</Text>
+            {statusFilter && (
+              <Pressable onPress={() => setStatusFilter(null)}>
+                <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "700" }}>Clear Filter</Text>
+              </Pressable>
+            )}
+          </View>
+          <StatRow label="Sent / Ready" value={sent} icon="paper-plane" color={colors.primary} onPress={() => toggleFilter("SENT")} isActive={statusFilter === "SENT"} />
+          <StatRow label="In Transit" value={inTransit} icon="navigate" color="#a855f7" onPress={() => toggleFilter("IN_TRANSIT")} isActive={statusFilter === "IN_TRANSIT"} />
+          <StatRow label="Received" value={received} icon="checkmark-circle" color={colors.success} onPress={() => toggleFilter("RECEIVED")} isActive={statusFilter === "RECEIVED"} />
+          <StatRow label="Pending" value={pending} icon="time" color={colors.warning} onPress={() => toggleFilter("PENDING")} isActive={statusFilter === "PENDING"} />
+          <StatRow label="Overdue" value={overdue} icon="alert-circle" color={colors.danger} onPress={() => toggleFilter("OVERDUE")} isActive={statusFilter === "OVERDUE"} />
         </View>
 
-        {/* ── Recent Dispatches ── */}
+      
+
+        {/* ── All Dispatches / Search ── */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Recent Activity</Text>
-          {(dispatches || []).slice(0, 5).map((d) => (
-            <View key={d._id} style={styles.recentRow}>
+          <Text style={styles.cardTitle}>Shipment Tracking</Text>
+          
+          <View style={styles.searchBar}>
+             <Ionicons name="search" size={18} color={colors.muted} />
+             <TextInput 
+               style={styles.searchInput} 
+               placeholder="Search tracking ID, docket, or branch..." 
+               placeholderTextColor={colors.muted}
+               value={searchQuery}
+               onChangeText={setSearchQuery}
+             />
+          </View>
+
+          {filteredDispatches.map((d) => (
+            <Pressable key={d._id} style={styles.recentRow} onPress={() => navigation.navigate("DispatchDetails", { id: d._id })}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.trackId}>#{d.trackingId}</Text>
                 <Text style={styles.trackSub}>{d.fromBranch} → {d.toBranch}</Text>
               </View>
               <StatusPill status={d.status} />
-            </View>
+            </Pressable>
           ))}
-          {dispatches?.length === 0 && (
-            <Text style={styles.emptyText}>No dispatches yet</Text>
+          {filteredDispatches.length === 0 && (
+            <Text style={styles.emptyText}>No shipments found.</Text>
           )}
         </View>
 
@@ -162,7 +200,9 @@ const styles = StyleSheet.create({
   barTrack: { flex: 1, height: 8, backgroundColor: colors.bgSoft, borderRadius: 4 },
   barFill: { height: "100%", backgroundColor: colors.primary, borderRadius: 4 },
   barCount: { color: colors.muted, fontWeight: "700", fontSize: 13, width: 28, textAlign: "right" },
-  recentRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border },
+  searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: colors.bgSoft, padding: 12, borderRadius: 12, marginBottom: 16 },
+  searchInput: { flex: 1, marginLeft: 10, color: colors.text, fontSize: 15 },
+  recentRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 14, borderTopWidth: 1, borderTopColor: colors.border },
   trackId: { color: colors.text, fontWeight: "700", fontSize: 15 },
   trackSub: { color: colors.muted, fontSize: 12, marginTop: 2 },
   emptyText: { color: colors.muted, fontSize: 14, textAlign: "center", paddingVertical: 16 }

@@ -191,6 +191,12 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const deleteDispatch = async (id) => {
+    await api.delete(`/dispatches/${id}`);
+    setDispatches((prev) => prev.filter((d) => d._id !== id));
+    loadAll();
+  };
+
   const updateProfile = async (payload) => {
     const { data } = await api.put("/auth/me", payload);
     localStorage.setItem('userInfo', JSON.stringify(data));
@@ -200,7 +206,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      user, login, signup, logout, loading, error, dashboard, dispatches, branches, refresh: loadAll, createDispatch, updateStatus, updateDispatch, updateProfile, api,
+      user, login, signup, logout, loading, error, dashboard, dispatches, branches, refresh: loadAll, createDispatch, updateStatus, updateDispatch, deleteDispatch, updateProfile, api,
       forgotPassword, resetPassword,
       toasts, confirmData, toast, confirm, setToasts, setConfirmData, handleConfirm, handleCancel
     }}>

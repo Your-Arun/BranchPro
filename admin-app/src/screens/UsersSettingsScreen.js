@@ -45,7 +45,11 @@ export const UsersSettingsScreen = () => {
   // Edit modal
   const [editVisible, setEditVisible] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
+  
   const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState("STAFF");
+  const [editBranchId, setEditBranchId] = useState("");
+  
   const [isSaving, setIsSaving] = useState(false);
 
   const handleCreateUser = async () => {
@@ -68,18 +72,25 @@ export const UsersSettingsScreen = () => {
   const openEdit = (u) => {
     setEditTarget(u);
     setEditName(u.fullName);
+    setEditRole(u.role || "STAFF");
+    setEditBranchId(u.branchId?._id || u.branchId || "");
     setEditVisible(true);
   };
 
   const handleEditSave = async () => {
     if (!editName.trim()) return Toast.show({ type: "error", text1: "Validation", text2: "Name cannot be empty." });
+    if (editRole === "STAFF" && !editBranchId) return Toast.show({ type: "error", text1: "Validation", text2: "Staff members must be assigned to a branch." });
 
     try {
       setIsSaving(true);
-      await api.put(`/admin/users/${editTarget._id}`, { fullName: editName });
+      await api.put(`/admin/users/${editTarget._id}`, { 
+        fullName: editName,
+        role: editRole,
+        branchId: editBranchId || null
+      });
       await refresh();
       setEditVisible(false);
-      Toast.show({ type: "success", text1: "Updated", text2: "User name updated successfully!" });
+      Toast.show({ type: "success", text1: "Updated", text2: "User details updated successfully!" });
     } catch (e) {
       Toast.show({ type: "error", text1: "Error", text2: e.response?.data?.message || "Update failed" });
     } finally {
@@ -193,27 +204,48 @@ export const UsersSettingsScreen = () => {
       {/* ─── EDIT USER MODAL ─── */}
       <Modal animationType="slide" transparent visible={editVisible} onRequestClose={() => setEditVisible(false)}>
         <View style={styles.overlay}>
-          <View style={[styles.sheet, { maxHeight: "50%" }]}>
+          <View style={[styles.sheet, { maxHeight: "80%" }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit User</Text>
               <Pressable onPress={() => setEditVisible(false)}>
                 <Ionicons name="close-circle" size={28} color={colors.muted} />
               </Pressable>
             </View>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              value={editName}
-              onChangeText={setEditName}
-              placeholder="Full Name"
-              placeholderTextColor={colors.muted}
-            />
-            <Text style={[styles.label, { color: colors.muted, fontSize: 13, marginTop: 8 }]}>
-              Email: {editTarget?.email}  •  Role: {editTarget?.role}
-            </Text>
-            <Pressable style={[styles.saveBtn, { marginTop: 20 }]} onPress={handleEditSave} disabled={isSaving}>
-              {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnTxt}>Save Changes</Text>}
-            </Pressable>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput
+                style={styles.input}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Full Name"
+                placeholderTextColor={colors.muted}
+              />
+              <Text style={[styles.label, { color: colors.muted, fontSize: 13, marginTop: 8 }]}>
+                Email: {editTarget?.email}
+              </Text>
+
+              <Text style={styles.label}>Assign Role</Text>
+              <View style={styles.chipWrap}>
+                {ROLES.map((r) => (
+                  <Pressable key={r} style={[styles.chip, editRole === r && styles.chipActive, { marginRight: 8, marginBottom: 8 }]} onPress={() => setEditRole(r)}>
+                    <Text style={[styles.chipText, editRole === r && styles.chipTextActive]}>{r}</Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={styles.label}>Assign Branch</Text>
+              <View style={styles.chipWrap}>
+                {branches.map((b) => (
+                  <Pressable key={b._id} style={[styles.chip, editBranchId === b._id && styles.chipActive, { marginRight: 8, marginBottom: 8 }]} onPress={() => setEditBranchId(b._id)}>
+                    <Text style={[styles.chipText, editBranchId === b._id && styles.chipTextActive]}>{b.name}</Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Pressable style={[styles.saveBtn, { marginTop: 20 }]} onPress={handleEditSave} disabled={isSaving}>
+                {isSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnTxt}>Save Changes</Text>}
+              </Pressable>
+            </ScrollView>
           </View>
         </View>
       </Modal>

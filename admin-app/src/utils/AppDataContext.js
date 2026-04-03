@@ -124,7 +124,12 @@ export const AppDataProvider = ({ children }) => {
   useEffect(() => {
     if (userAuth) {
       loadAll();
-      registerForPushNotificationsAsync();
+      registerForPushNotificationsAsync().then(token => {
+        if (token) {
+          api.post("/auth/push-token", { pushToken: token })
+            .catch(err => console.log("Failed to sync push token with backend:", err.message));
+        }
+      });
 
       // Background polling every 30 seconds
       const poll = setInterval(() => {

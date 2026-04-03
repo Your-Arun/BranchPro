@@ -17,9 +17,11 @@ const getStatusColor = (status) => {
   }
 };
 
+const statuses = ["SENT", "IN_TRANSIT", "WAITING_RECEIPT", "RECEIVED", "PENDING", "OVERDUE", "FAILED"];
+
 const DispatchDetails = () => {
   const { id } = useParams();
-  const { api, updateStatus, user, toast, confirm } = useAuth();
+  const { api, updateStatus, deleteDispatch, user, toast, confirm } = useAuth();
   const navigate = useNavigate();
   
   const [dispatchData, setDispatchData] = useState(null);
@@ -46,16 +48,47 @@ const DispatchDetails = () => {
 
   const branchId = user?.branchId || user?.branch?._id;
   const isIncoming = String(dispatchData.toBranchId?._id || dispatchData.toBranchId) === String(branchId);
-  const needsConfirm = isIncoming && dispatchData.status !== 'RECEIVED' && dispatchData.status !== 'FAILED';
+  const isSender = String(dispatchData.fromBranchId?._id || dispatchData.fromBranchId) === String(branchId);
+  
+  const canEditOrDelete = isSender || user?.role === 'ADMIN';
 
   const handleConfirm = async () => {
-    confirm("Confirm Receipt", "Confirm receipt of this package?", async () => {
+    confirm("Confirm form", "Change status to RECEIVED?", async () => {
       try {
         const updated = await updateStatus(id, "RECEIVED");
         setDispatchData(updated);
         toast("Package marked as received", "success");
       } catch (err) {
         toast(err.response?.data?.message || err.message || "Action failed", "error");
+      }
+    });
+  };
+
+  const onStatusChange = (newStatus) => {
+    confirm("Update Status", `Are you sure you want to change the status to ${newStatus}?`, async () => {
+      try {
+        setLoading(true);
+        const updated = await updateStatus(id, newStatus);
+        setDispatchData(updated);
+        toast(`Status updated to ${newStatus}`, "success");
+      } catch (err) {
+        toast(err.response?.data?.message || err.message || "Failed to update status", "error");
+      } finally {
+        setLoading(false);
+      }
+    });
+  };
+
+  const handleDelete = () => {
+    confirm("Delete Dispatch", "Are you sure you want to permanently delete this dispatch?", async () => {
+      try {
+        setLoading(true);
+        await deleteDispatch(id);
+        toast("Dispatch deleted successfully", "success");
+        navigate('/');
+      } catch (err) {
+        toast(err.response?.data?.message || err.message || "Delete failed", "error");
+        setLoading(false);
       }
     });
   };
@@ -78,24 +111,30 @@ const DispatchDetails = () => {
           <p className="subtitle" style={{ marginTop: '4px' }}>Created on {formatTime(dispatchData.createdAt)}</p>
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button 
-            onClick={() => navigate(`/dispatch/edit/${id}`)}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              padding: '8px 16px', 
-              backgroundColor: 'var(--bg-soft)', 
-              border: '1px solid var(--border)', 
-              borderRadius: '12px', 
-              color: 'var(--text)',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            <Edit size={16} /> Edit
-          </button>
+          {canEditOrDelete && (
+             <>
+                <button 
+                  onClick={handleDelete}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', 
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', 
+                    borderRadius: '12px', color: 'var(--danger)', cursor: 'pointer', fontSize: '14px', fontWeight: '600'
+                  }}
+                >
+                  <XCircle size={16} /> Delete
+                </button>
+                <button 
+                  onClick={() => navigate(`/dispatch/edit/${id}`)}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', 
+                    backgroundColor: 'var(--bg-soft)', border: '1px solid var(--border)', 
+                    borderRadius: '12px', color: 'var(--text)', cursor: 'pointer', fontSize: '14px', fontWeight: '600'
+                  }}
+                >
+                  <Edit size={16} /> Edit
+                </button>
+             </>
+          )}
           <div style={{ 
             padding: '8px 20px', 
             borderRadius: '100px', 
@@ -157,13 +196,31 @@ const DispatchDetails = () => {
         )}
       </div>
 
-      {needsConfirm && (
-        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'center' }}>
-          <button className="btn-primary" onClick={handleConfirm} style={{ width: 'auto', padding: '14px 40px', backgroundColor: 'var(--success)' }}>
-            <CheckCircle size={20} /> Mark as Received
-          </button>
+      <div style={{ marginBottom: '32px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>Manage Current Status</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+          {statuses.map(s => (
+            <button 
+              key={s} 
+              onClick={() => onStatusChange(s)}
+              disabled={loading}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '12px',
+                border: `1px solid ${dispatchData.status === s ? getStatusColor(s) : 'var(--border)'}`,
+                backgroundColor: dispatchData.status === s ? getStatusColor(s) : 'var(--card)',
+                color: dispatchData.status === s ? '#fff' : 'var(--muted)',
+                fontWeight: dispatchData.status === s ? 'bold' : '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                opacity: loading ? 0.7 : 1
+              }}
+            >
+              {s.replace("_", " ")}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* TIMELINE */}
       <h2 style={{ fontSize: '20px', marginBottom: '20px' }}>Movement Timeline</h2>
