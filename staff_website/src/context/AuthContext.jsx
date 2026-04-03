@@ -133,6 +133,16 @@ export const AuthProvider = ({ children }) => {
     setUser(data);
   };
 
+  const forgotPassword = async (email) => {
+    const { data } = await api.post('/auth/forgot-password', { email });
+    return data;
+  };
+
+  const resetPassword = async (token, password) => {
+    const { data } = await api.post(`/auth/reset-password/${token}`, { password });
+    return data;
+  };
+
 
   // Auto-logout after 30 minutes of inactivity
   useEffect(() => {
@@ -191,6 +201,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, login, signup, logout, loading, error, dashboard, dispatches, branches, refresh: loadAll, createDispatch, updateStatus, updateDispatch, updateProfile, api,
+      forgotPassword, resetPassword,
       toasts, confirmData, toast, confirm, setToasts, setConfirmData, handleConfirm, handleCancel
     }}>
       {children}

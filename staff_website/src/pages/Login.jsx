@@ -41,6 +41,9 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           <input className="input-field" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
           <input className="input-field" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', marginTop: '-8px' }}>
+            <Link to="/forgot-password" style={{ color: 'var(--primary)', fontSize: '13px', fontWeight: 'bold' }}>Forgot Password?</Link>
+          </div>
           <button className="btn-primary" type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
         </form>
         <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--muted)' }}>

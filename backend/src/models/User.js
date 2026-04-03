@@ -10,7 +10,9 @@ const userSchema = new mongoose.Schema(
     role: { type: String, enum: ["ADMIN", "STAFF"], default: "STAFF" },
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: false },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: false },
-    avatarUrl: { type: String, default: "" }
+    avatarUrl: { type: String, default: "" },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date
   },
   { timestamps: true }
 );

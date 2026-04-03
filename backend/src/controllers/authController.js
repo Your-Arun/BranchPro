@@ -1,7 +1,9 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { User } from "../models/User.js";
 import { Branch } from "../models/Branch.js";
 import { Company } from "../models/Company.js";
+import { sendPasswordResetEmail } from "../utils/mailer.js";
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET || "branchflow_secret_key", {
@@ -180,3 +182,72 @@ export const updateProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Please provide an email" });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ message: "There is no user with that email address." });
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    
+    await user.save();
+
+    // Create reset url (this should point to the frontend application)
+    // For local dev it usually runs on port 5173 or the origin of request
+    const origin = req.headers.origin || "http://localhost:5173";
+    const resetUrl = `${origin}/reset-password/${resetToken}`;
+
+    console.log("Reset URL:", resetUrl); // Log for easy local testing
+
+    try {
+      await sendPasswordResetEmail(user.email, resetUrl);
+      res.status(200).json({ message: "Password reset link sent to email!" });
+    } catch (err) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save();
+      return res.status(500).json({ message: "Email could not be sent" });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    // Get hashed token
+    const resetPasswordToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    if (!req.body.password) {
+      return res.status(400).json({ message: "Please provide a new password" });
+    }
+
+    // Set new password
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
