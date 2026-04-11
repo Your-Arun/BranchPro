@@ -99,8 +99,10 @@ export const DashboardScreen = ({ navigation }) => {
       {/* --- HEADER AREA --- */}
       <View style={styles.headerArea}>
         <View>
-          <Text style={styles.greeting}>Hello, {userAuth?.fullName?.split(" ")[0] || "Staff"} 👋</Text>
-          <Text style={styles.subGreeting}>{userAuth?.branch?.name || userAuth?.branchName || "Your Branch"}</Text>
+          <Text style={[styles.greeting, { fontSize: 34, letterSpacing: -1 }]}>Hello, {userAuth?.fullName?.split(" ")[0] || "Staff"}</Text>
+          <Text style={[styles.subGreeting, { color: colors.primary, fontWeight: '800', textTransform: 'uppercase', fontSize: 13, letterSpacing: 1 }]}>
+            {userAuth?.branch?.name || userAuth?.branchName || "STAFF PORTAL"}
+          </Text>
         </View>
         
         <Pressable 
@@ -229,9 +231,11 @@ export const DashboardScreen = ({ navigation }) => {
             <View style={styles.trackBadge}>
               <Ionicons name="cube-outline" size={20} color={colors.primary} />
             </View>
-            <View style={{ marginLeft: 12 }}>
+            <View style={{ marginLeft: 12, flex: 1 }}>
               <Text style={styles.trackId}>#{item.trackingId}</Text>
-              <Text style={styles.trackSub}>{item.branchName} • {timeAgo(item.createdAt)}</Text>
+              <Text style={[styles.trackSub, { color: item.branchName?.includes("From") ? colors.warning : colors.primary }]}>
+                {item.branchName} • {timeAgo(item.createdAt)}
+              </Text>
             </View>
           </View>
           <StatusPill status={item.status} />
@@ -288,8 +292,8 @@ const styles = StyleSheet.create({
   changeBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 6, paddingVertical: 4, borderRadius: 10, gap: 4 },
   change: { fontSize: 11, fontWeight: "800" },
   metricBottom: { marginTop: 16 },
-  metricValue: { color: colors.text, fontWeight: "800", fontSize: 26, letterSpacing: -0.5 },
-  metricLabel: { color: colors.muted, marginTop: 4, fontSize: 13, fontWeight: "600" },
+  metricValue: { color: colors.text, fontWeight: "900", fontSize: 28, letterSpacing: -1 },
+  metricLabel: { color: colors.muted, marginTop: 4, fontSize: 13, fontWeight: "800", textTransform: 'uppercase', letterSpacing: 0.5 },
   
   chartCard: { backgroundColor: colors.card, borderRadius: 24, borderWidth: 1, borderColor: colors.border, padding: 20, marginBottom: 28 },
   chartHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },

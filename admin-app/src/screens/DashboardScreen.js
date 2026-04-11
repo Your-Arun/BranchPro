@@ -160,12 +160,12 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8
   },
-  welcomeText: { color: "rgba(255,255,255,0.8)", fontSize: 16, fontWeight: "600", letterSpacing: 0.5 },
-  companyName: { color: "#fff", fontSize: 30, fontWeight: "800", marginTop: 4, letterSpacing: -0.5 },
-  heroFooter: { flexDirection: "row", marginTop: 32, alignItems: "center", backgroundColor: "rgba(0,0,0,0.15)", padding: 16, borderRadius: 20 },
+  welcomeText: { color: "rgba(255,255,255,0.8)", fontSize: 16, fontWeight: "700", letterSpacing: 0.5 },
+  companyName: { color: "#fff", fontSize: 34, fontWeight: "900", marginTop: 4, letterSpacing: -1 },
+  heroFooter: { flexDirection: "row", marginTop: 32, alignItems: "center", backgroundColor: "rgba(0,0,0,0.2)", padding: 18, borderRadius: 24 },
   heroStat: { flex: 1, alignItems: "center" },
-  heroStatVal: { color: "#fff", fontSize: 26, fontWeight: "800" },
-  heroStatLab: { color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: "600", marginTop: 4 },
+  heroStatVal: { color: "#fff", fontSize: 28, fontWeight: "900" },
+  heroStatLab: { color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: "700", marginTop: 4 },
   divider: { width: 1, height: 40, backgroundColor: "rgba(255,255,255,0.2)" },
   
   sectionTitle: { color: colors.text, fontSize: 20, fontWeight: "800", marginBottom: 16, letterSpacing: 0.5 },
@@ -188,8 +188,8 @@ const styles = StyleSheet.create({
   statHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   iconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   statContent: { marginTop: 16 },
-  statValue: { color: colors.text, fontSize: 28, fontWeight: "800", letterSpacing: -0.5 },
-  statLabel: { color: colors.muted, fontSize: 13, fontWeight: "600", marginTop: 4 },
+  statValue: { color: colors.text, fontSize: 30, fontWeight: "900", letterSpacing: -1 },
+  statLabel: { color: colors.muted, fontSize: 12, fontWeight: "800", marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
   
   actionCard: { backgroundColor: colors.card, borderRadius: 28, padding: 22, borderWidth: 1, borderColor: colors.border, marginBottom: 24 },
   actionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
