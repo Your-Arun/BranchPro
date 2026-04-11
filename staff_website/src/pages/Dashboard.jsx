@@ -53,7 +53,8 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <button 
-                  style={{ backgroundColor: 'var(--warning)', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', zIndex: 2 }}
+                  className="confirm-btn"
+                  style={{ backgroundColor: 'var(--warning)', color: '#fff', padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', zIndex: 2, border: 'none', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}
                   onClick={(e) => { 
                     e.stopPropagation(); 
                     updateStatus(item._id, "RECEIVED").catch(err => {
@@ -129,9 +130,10 @@ const Dashboard = () => {
                 <p style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: '14px' }}>{item.branchName} • {timeAgo(item.createdAt)}</p>
               </div>
             </div>
-            <div style={{ padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 'bold', 
+            <div className="status-badge" style={{ padding: '6px 16px', borderRadius: '100px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px',
               backgroundColor: item.status === 'RECEIVED' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(78, 141, 255, 0.15)',
-              color: item.status === 'RECEIVED' ? 'var(--success)' : 'var(--primary)'
+              color: item.status === 'RECEIVED' ? 'var(--success)' : 'var(--primary)',
+              border: item.status === 'RECEIVED' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(78, 141, 255, 0.2)'
             }}>
               {item.status}
             </div>

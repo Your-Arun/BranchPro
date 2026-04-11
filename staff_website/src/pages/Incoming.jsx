@@ -73,8 +73,8 @@ const Incoming = () => {
               
               {needsConfirm && (
                 <button 
-                  className="btn-primary" 
-                  style={{ width: 'auto', padding: '10px 24px', backgroundColor: 'var(--success)', zIndex: 2 }}
+                  className="confirm-btn btn-primary" 
+                  style={{ width: 'auto', padding: '12px 24px', backgroundColor: 'var(--success)', zIndex: 2, borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}
                   onClick={(e) => { 
                     e.stopPropagation(); 
                     updateStatus(item._id, "RECEIVED").catch(err => {
@@ -88,7 +88,8 @@ const Incoming = () => {
               
               {!isIncoming && item.status !== 'FAILED' && item.status !== 'RECEIVED' && (
                 <button 
-                  style={{ backgroundColor: 'transparent', color: 'var(--danger)', padding: '10px 24px', borderRadius: '12px', border: '1px solid var(--danger)', cursor: 'pointer', fontWeight: 'bold', zIndex: 2 }}
+                  className="confirm-btn"
+                  style={{ backgroundColor: 'transparent', color: 'var(--danger)', padding: '12px 24px', borderRadius: '12px', border: '1px solid var(--danger)', cursor: 'pointer', fontWeight: 'bold', zIndex: 2 }}
                   onClick={(e) => {
                     e.stopPropagation();
                     confirm("Withdraw Shipment", "Are you sure you want to withdraw this shipment?", async () => {

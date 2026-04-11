@@ -15,19 +15,27 @@ export const getDashboard = async (req, res, next) => {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
+    const isStaff = req.user.role === "STAFF";
+    const branchId = req.user.branchId;
+
+    // Determine queries based on role
+    // For staff, Sent means outbound from their branch, Received/Pending means inbound to their branch
+    // For admin, it's global company scope
+    const sentBase = isStaff ? { fromBranchId: branchId } : scopeQuery;
+    const recvBase = isStaff ? { toBranchId: branchId } : scopeQuery;
+
     const [allCount, receivedCount, pendingCount, overdueCount, monthCount, prevMonthCount, recent] = await Promise.all([
-      Dispatch.countDocuments(scopeQuery),
-      Dispatch.countDocuments({ ...scopeQuery, status: "RECEIVED" }),
+      Dispatch.countDocuments(sentBase),
+      Dispatch.countDocuments({ ...recvBase, status: "RECEIVED" }),
       Dispatch.countDocuments({ 
-        ...scopeQuery, 
+        ...recvBase, 
         status: { $in: ["SENT", "IN_TRANSIT", "WAITING_RECEIPT", "PENDING"] },
         createdAt: { $gte: yesterday } 
       }),
       Dispatch.countDocuments({ 
-        ...scopeQuery, 
+        ...recvBase, 
         $or: [
           { status: "OVERDUE" },
           { 
@@ -36,9 +44,14 @@ export const getDashboard = async (req, res, next) => {
           }
         ]
       }),
-      Dispatch.countDocuments({ ...scopeQuery, createdAt: { $gte: monthStart } }),
-      Dispatch.countDocuments({ ...scopeQuery, createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
-      Dispatch.find(scopeQuery).populate("toBranchId", "name").sort({ createdAt: -1 }).limit(5).lean()
+      Dispatch.countDocuments({ ...sentBase, createdAt: { $gte: monthStart } }),
+      Dispatch.countDocuments({ ...sentBase, createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
+      Dispatch.find(scopeQuery)
+        .populate("fromBranchId", "name")
+        .populate("toBranchId", "name")
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean()
     ]);
 
     // Real monthly aggregation for the last 6 months
@@ -78,13 +91,27 @@ export const getDashboard = async (req, res, next) => {
       },
       alert: overdueCount > 0 ? { count: overdueCount, message: "Urgent action required: Pending overdues detected" } : null,
       monthly,
-      recentActivity: recent.map((item) => ({
-        id: item._id,
-        trackingId: item.trackingId,
-        branchName: item.toBranchId?.name ?? "Unknown Hub",
-        status: item.status,
-        createdAt: item.createdAt
-      }))
+      recentActivity: recent.map((item) => {
+        let branchName = item.toBranchId?.name ?? "Unknown Hub";
+        if (isStaff && String(item.toBranchId?._id || item.toBranchId) === String(branchId)) {
+          // If we are the receiver, show who it came FROM
+          branchName = `From: ${item.fromBranchId?.name ?? "External"}`;
+        } else if (isStaff) {
+          // If we are the sender, show who it's going TO
+          branchName = `To: ${item.toBranchId?.name ?? "External"}`;
+        } else {
+          // Admin view: Show path
+          branchName = `${item.fromBranchId?.name ?? "?"} → ${item.toBranchId?.name ?? "?"}`;
+        }
+
+        return {
+          id: item._id,
+          trackingId: item.trackingId,
+          branchName: branchName,
+          status: item.status,
+          createdAt: item.createdAt
+        };
+      })
     });
   } catch (error) {
     next(error);
