@@ -6,7 +6,6 @@
 
 ---
 
-[![Admin Live](https://img.shields.io/badge/Admin%20Panel-Live%20Website-purple?style=for-the-badge&logo=react)](https://adminpanel-branch.onrender.com/)
 [![Staff Live](https://img.shields.io/badge/Staff%20Portal-Live%20Website-blue?style=for-the-badge&logo=react)](https://branchpro-1.onrender.com/#/login)
 [![Backend](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-green?style=for-the-badge&logo=node.js)](/)
 [![Database](https://img.shields.io/badge/Database-MongoDB-brightgreen?style=for-the-badge&logo=mongodb)](/)
