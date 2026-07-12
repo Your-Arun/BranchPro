@@ -18,7 +18,7 @@
 ## 📌 Links & Credentials (At a Glance)
 
 ### 🌐 Live Web Apps
-* **👑 Admin Web Panel:** [https://adminpanel-branch.onrender.com/](https://adminpanel-branch.onrender.com/)
+* **👑 Admin Web Panel:** [https://***************.com/](https://********.com/)
 * **👷 Staff Web Portal:** [https://branchpro-1.onrender.com/#/login](https://branchpro-1.onrender.com/#/login)
 
 ### 📱 Android APKs (In-Repo Downloads)
